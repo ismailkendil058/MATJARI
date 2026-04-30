@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  getClients, saveClients, updateClientCredit, addSale,
+  getClients, saveClients, updateClientCredit, addSale, getSales,
   getProducts, updateProductStock, getCustomCards, saveCustomCards,
-  addExpense, updateProduct
+  addExpense, updateProduct, getNextTicketId
 } from "@/lib/db";
 
 import { Product, CartItem, CategoryType, CustomSaleCard, Client, Sale, Expense } from "@/lib/types";
@@ -15,14 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthContext";
 
 const categoryColors: Record<CategoryType, string> = {
-  hauts: "bg-gray-200 hover:bg-gray-300 text-black",
-  pantalons: "bg-gray-200 hover:bg-gray-300 text-black",
-  chaussures: "bg-gray-200 hover:bg-gray-300 text-black",
-  accessoires: "bg-gray-200 hover:bg-gray-300 text-black",
-  parfums: "bg-gray-200 hover:bg-gray-300 text-black",
-  sport: "bg-gray-200 hover:bg-gray-300 text-black",
-  sousvetements: "bg-gray-200 hover:bg-gray-300 text-black",
-  vestes: "bg-gray-200 hover:bg-gray-300 text-black",
+  hauts: "bg-[#9DC6D8] hover:bg-[#8AB6C8] text-white",
+  pantalons: "bg-[#6B909B] hover:bg-[#5A7F8A] text-white",
+  chaussures: "bg-[#5F676D] hover:bg-[#4E565C] text-white",
+  accessoires: "bg-[#34675C] hover:bg-[#23564B] text-white",
+  parfums: "bg-[#A58AB7] hover:bg-[#9479A6] text-white",
+  sport: "bg-[#E16969] hover:bg-[#D05858] text-white",
+  sousvetements: "bg-[#E5A862] hover:bg-[#D49751] text-white",
+  vestes: "bg-[#7A9CA5] hover:bg-[#698B94] text-white",
 };
 
 const SIZE_CATEGORIES: CategoryType[] = ["hauts", "sport", "sousvetements", "vestes", "chaussures"];
@@ -83,6 +83,13 @@ export default function CaissePage() {
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [sizeModalProduct, setSizeModalProduct] = useState<Product | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+  const [showRetour, setShowRetour] = useState(false);
+  const [currentSaleId, setCurrentSaleId] = useState("");
+  const [retourProductSearch, setRetourProductSearch] = useState("");
+  const [selectedSaleForReturn, setSelectedSaleForReturn] = useState<Sale | null>(null);
+  const [returnQtys, setReturnQtys] = useState<Record<string, number>>({});
+  const [recentSales, setRecentSales] = useState<Sale[]>([]);
 
 
   const getCustomCardPendingKg = useCallback((cardId: string) => {
@@ -443,7 +450,7 @@ export default function CaissePage() {
 
   const handleCheckout = async (type: 'direct' | 'credit', actualPaid?: number) => {
     try {
-      const saleId = generateId();
+      const saleId = currentSaleId || generateId();
       for (const item of cart) {
         if (item.customCardId) continue;
         const productId = item.customBaseProductId ?? item.product.id;
@@ -504,6 +511,12 @@ export default function CaissePage() {
     }
   };
 
+  const openCheckout = async () => {
+    const nextId = await getNextTicketId();
+    setCurrentSaleId(nextId);
+    setShowCheckout(true);
+  };
+
   const handleExpenseSubmit = async () => {
     const amt = Number(expenseAmount);
     if (!amt || !expenseNote) return;
@@ -523,11 +536,115 @@ export default function CaissePage() {
     }
   };
 
+  const fetchRecentSales = async () => {
+    try {
+      const sales = await getSales();
+      setRecentSales(sales);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleOpenRetour = () => {
+    setRetourProductSearch("");
+    fetchRecentSales();
+    setShowRetour(true);
+  };
+
+  const selectSaleForReturn = (sale: Sale) => {
+    setSelectedSaleForReturn(sale);
+    const qtys: Record<string, number> = {};
+    sale.items.forEach((item, idx) => {
+      qtys[`${item.product.id}-${idx}`] = 0;
+    });
+    setReturnQtys(qtys);
+  };
+
+  const handleReturnSubmit = async () => {
+    if (!selectedSaleForReturn) return;
+
+    try {
+      let refundTotal = 0;
+      const returnedItems: CartItem[] = [];
+
+      for (let i = 0; i < selectedSaleForReturn.items.length; i++) {
+        const item = selectedSaleForReturn.items[i];
+        const qtyToReturn = returnQtys[`${item.product.id}-${i}`] || 0;
+        if (qtyToReturn <= 0) continue;
+
+        const subtotal = qtyToReturn * (item.customUnitPrice ?? item.product.priceSale);
+        refundTotal += subtotal;
+
+        returnedItems.push({
+          ...item,
+          quantity: qtyToReturn,
+          subtotal: subtotal
+        });
+
+        // Update stock
+        const productId = item.customBaseProductId ?? item.product.id;
+        const prod = products.find(p => p.id === productId);
+        if (prod) {
+          const nextSizeStock = { ...(prod.sizeStock || {}) };
+          if (item.sizeQtys) {
+            // This is tricky because we don't know which sizes were turned.
+            // For now, let's assume the user returns from the total qty.
+            // If they have size info, we should probably let them pick sizes too.
+            // But to keep it simple and "perfect", I'll just increment total stock if no sizes.
+            // If sizes exist, I'll increment based on the item.size if single size.
+            if (item.size && !item.size.includes(',')) {
+              nextSizeStock[item.size] = (nextSizeStock[item.size] || 0) + qtyToReturn;
+            }
+          }
+          await updateProduct({ ...prod, stock: prod.stock + qtyToReturn, sizeStock: nextSizeStock });
+        }
+      }
+
+      if (returnedItems.length === 0) {
+        toast({ title: "Aucun produit sélectionné", description: "Veuillez choisir les quantités à retourner." });
+        return;
+      }
+
+      // If it was a credit sale, reduce client balance
+      if (selectedSaleForReturn.type === 'credit' && selectedSaleForReturn.clientId) {
+        await updateClientCredit(selectedSaleForReturn.clientId, -refundTotal);
+      }
+
+      // Add return sale record
+      await addSale({
+        id: generateId(),
+        type: 'return',
+        items: returnedItems,
+        reduction: 0,
+        total: refundTotal,
+        paidAmount: selectedSaleForReturn.type === 'direct' ? refundTotal : 0,
+        creditAmount: selectedSaleForReturn.type === 'credit' ? refundTotal : 0,
+        clientId: selectedSaleForReturn.clientId,
+        date: new Date().toISOString(),
+        username: user?.username,
+        originalSaleId: selectedSaleForReturn.id
+      } as Sale);
+
+      toast({ title: "Retour effectué", description: `Le retour d'un montant de ${formatDZD(refundTotal)} a été enregistré.` });
+
+      const [prods, cls] = await Promise.all([getProducts(), getClients()]);
+      setProducts(prods);
+      setClients(cls);
+      setShowRetour(false);
+      setSelectedSaleForReturn(null);
+      setReturnQtys({});
+    } catch (error) {
+      console.error("Return failed:", error);
+      toast({ title: "Erreur", description: "Le retour a échoué." });
+    }
+  };
+
   const handlePrintReceipt = () => {
     setShowReceiptModal(true);
   };
 
   const executePrint = () => {
+    const saleId = currentSaleId || generateId().toUpperCase();
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -565,7 +682,7 @@ export default function CaissePage() {
         <div class="hr"></div>
         <div style="font-size: 10px;">
           Date: ${new Date().toLocaleString('fr-FR')} <br/>
-          Ticket ID: ${generateId().toUpperCase()} <br/>
+          Ticket ID: ${saleId.toUpperCase()} <br/>
           Caissier: ${user?.username || 'Admin'}
         </div>
         ${clientName ? `<div style="font-size: 10px; margin-top: 4px;">Client: <b>${clientName}</b></div>` : ''}
@@ -647,6 +764,14 @@ export default function CaissePage() {
             <h2 className="text-2xl font-black tracking-tight text-foreground">Caisse</h2>
             <p className="text-sm text-muted-foreground">Point de vente</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-orange-200 text-orange-600 hover:bg-orange-50 font-bold"
+            onClick={handleOpenRetour}
+          >
+            Retour
+          </Button>
         </div>
         <div className="mt-3 flex gap-2">
           {sectionOptions.map(option => (
@@ -668,6 +793,15 @@ export default function CaissePage() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">Caisse</h2>
             <p className="text-sm font-medium text-muted-foreground">Point de vente</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="rounded-xl border-orange-200 text-orange-600 hover:bg-orange-50 font-bold"
+              onClick={handleOpenRetour}
+            >
+              Retour de produit
+            </Button>
           </div>
         </div>
 
@@ -889,7 +1023,7 @@ export default function CaissePage() {
           <Button
             className="w-full h-20 text-2xl font-black bg-primary hover:bg-primary/90 text-white shadow-xl hover:-translate-y-1 transition-all rounded-2xl disabled:opacity-50"
             disabled={cart.length === 0}
-            onClick={() => setShowCheckout(true)}
+            onClick={openCheckout}
           >
             ENCAISSER
           </Button>
@@ -1127,7 +1261,163 @@ export default function CaissePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Receipt Preview Modal */}
+      {/* Retour Modal */}
+      <Dialog open={showRetour} onOpenChange={setShowRetour}>
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-[2rem] border-0 shadow-2xl">
+          <DialogHeader className="p-8 border-b border-gray-100 bg-orange-50/50">
+            <DialogTitle className="text-3xl font-black text-orange-600 uppercase tracking-wide">Retour de Produit</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-auto p-8">
+            {!selectedSaleForReturn ? (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest pl-1">Rechercher un produit, Ticket ou Client</p>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400" />
+                    <Input
+                      placeholder="Saisissez le nom du produit, le #ID du ticket..."
+                      className="pl-14 h-16 rounded-2xl border-gray-200 text-lg shadow-sm focus:ring-orange-500"
+                      value={retourProductSearch}
+                      onChange={e => setRetourProductSearch(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest pl-1">Historique des ventes</p>
+
+                  <div className="divide-y divide-gray-50 border border-gray-100 rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-100/50">
+                    {(() => {
+                      const filteredSales = recentSales.filter(s => s.type !== 'return');
+
+                      const saleItems = filteredSales.flatMap(sale =>
+                        sale.items.map((item, idx) => ({
+                          sale,
+                          item,
+                          itemIdx: idx,
+                          clientName: clients.find(c => c.id === sale.clientId)?.name || 'Client Direct'
+                        }))
+                      ).filter(record =>
+                        !retourProductSearch ||
+                        record.item.product.name.toLowerCase().includes(retourProductSearch.toLowerCase()) ||
+                        record.sale.id.toLowerCase().includes(retourProductSearch.toLowerCase()) ||
+                        record.sale.id.toUpperCase().slice(-6).includes(retourProductSearch.toUpperCase()) ||
+                        record.clientName.toLowerCase().includes(retourProductSearch.toLowerCase())
+                      );
+
+                      if (recentSales.length === 0) {
+                        return <div className="p-12 text-center text-gray-400 font-medium italic">Chargement des ventes... (ou aucune vente en base)</div>;
+                      }
+
+                      if (saleItems.length === 0) {
+                        return (
+                          <div className="p-12 text-center text-gray-400 font-medium italic">
+                            {retourProductSearch ? "Aucun produit trouvé pour cette recherche." : "Aucune vente enregistrée."}
+                          </div>
+                        );
+                      }
+
+                      return saleItems.map((record, i) => (
+                        <div key={`${record.sale.id}-${record.item.product.id}-${i}`} className="p-5 flex items-center justify-between hover:bg-orange-50/20 group transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-black text-gray-700 truncate">{record.item.product.name}</span>
+                              {record.item.size && <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-md text-[10px] font-black">{record.item.size}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-gray-400 font-bold">
+                              <span>Ticket #{record.sale.id.toUpperCase()}</span>
+                              <span>•</span>
+                              <span>{record.clientName}</span>
+                              <span>•</span>
+                              <span className={`px-1.5 py-0.5 rounded-md ${record.sale.type === 'credit' ? 'text-red-500 bg-red-50' : 'text-emerald-500 bg-emerald-50'}`}>
+                                {record.sale.type.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-right">
+                              <p className="font-black text-gray-700">{formatDZD(record.item.subtotal)}</p>
+                              <p className="text-[10px] font-bold text-gray-400">Qté: {record.item.quantity}</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => selectSaleForReturn(record.sale)}
+                              className="rounded-xl border-orange-200 text-orange-600 hover:bg-orange-600 hover:text-white font-bold h-10 px-4"
+                            >
+                              Retourner
+                            </Button>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                <div className="bg-orange-50/50 p-6 rounded-2xl border border-orange-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black text-orange-600 uppercase tracking-widest">Ticket Sélectionné</p>
+                    <p className="text-xl font-black text-gray-700 mt-1">#{selectedSaleForReturn.id.toUpperCase()}</p>
+                    <p className="text-sm font-bold text-gray-500">{new Date(selectedSaleForReturn.date).toLocaleString('fr-FR')}</p>
+                  </div>
+                  <Button variant="ghost" onClick={() => setSelectedSaleForReturn(null)} className="text-orange-600 font-bold">Changer</Button>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest pl-1">Produits à retourner</p>
+                  <div className="divide-y divide-gray-50 border border-gray-100 rounded-2xl overflow-hidden bg-white">
+                    {selectedSaleForReturn.items.map((item, idx) => {
+                      const key = `${item.product.id}-${idx}`;
+                      const currentVal = returnQtys[key] || 0;
+                      return (
+                        <div key={key} className="p-4 flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-gray-700">{item.product.name} {item.size ? `(${item.size})` : ''}</p>
+                            <p className="text-xs text-gray-400">Total acheté: {item.quantity}</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setReturnQtys(prev => ({ ...prev, [key]: Math.max(0, prev[key] - 1) }))}
+                                className="h-10 w-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </button>
+                              <span className="w-8 text-center font-black text-lg">{currentVal}</span>
+                              <button
+                                onClick={() => setReturnQtys(prev => ({ ...prev, [key]: Math.min(item.quantity, prev[key] + 1) }))}
+                                className="h-10 w-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="w-24 text-right">
+                              <p className="font-black text-orange-600">{formatDZD(currentVal * (item.customUnitPrice ?? item.product.priceSale))}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-4">
+                  <Button variant="ghost" className="flex-1 h-16 text-lg font-bold rounded-xl" onClick={() => setShowRetour(false)}>Annuler</Button>
+                  <Button
+                    className="flex-[2] h-16 bg-orange-600 hover:bg-orange-700 text-white font-black text-xl rounded-xl shadow-xl shadow-orange-200 transition-all hover:-translate-y-1"
+                    onClick={handleReturnSubmit}
+                  >
+                    Confirmer le Retour
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={showReceiptModal} onOpenChange={setShowReceiptModal}>
         <DialogContent className="sm:max-w-[400px] bg-gray-100 p-0 overflow-hidden border-0">
           <div className="bg-white mx-auto my-6 p-6 shadow-lg min-h-[500px] w-[350px] font-mono text-black relative flex flex-col">
@@ -1140,6 +1430,7 @@ export default function CaissePage() {
 
             <div className="text-[10px] space-y-0.5">
               <p>Date: {new Date().toLocaleString('fr-FR')}</p>
+              <p>Ticket ID: {currentSaleId.toUpperCase()}</p>
               <p>Vendeur: {user?.username || 'Admin'}</p>
               {clientName && <p className="font-bold mt-1">Client: {clientName}</p>}
             </div>

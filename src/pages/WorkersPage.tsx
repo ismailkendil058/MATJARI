@@ -142,9 +142,9 @@ const WorkersPage = () => {
                             <Table>
                                 <TableHeader className="bg-secondary/50 sticky top-0 z-10 backdrop-blur-sm">
                                     <TableRow className="hover:bg-transparent border-border">
-                                        <TableHead className="font-bold text-foreground text-xl py-6 px-6">Utilisateur</TableHead>
-                                        <TableHead className="font-bold text-foreground text-xl py-6 px-6">Rôle</TableHead>
-                                        <TableHead className="font-bold text-foreground text-xl py-6 px-6">Statut</TableHead>
+                                        <TableHead className="font-bold text-foreground text-xl py-6 px-6 text-center">Utilisateur</TableHead>
+                                        <TableHead className="font-bold text-foreground text-xl py-6 px-6 text-center">Rôle</TableHead>
+                                        <TableHead className="font-bold text-foreground text-xl py-6 px-6 text-center">Statut</TableHead>
                                         <TableHead className="text-right font-bold text-foreground text-xl py-6 px-6">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -158,13 +158,13 @@ const WorkersPage = () => {
                                     ) : (
                                         workers.map((worker) => (
                                             <TableRow key={worker.id} className="group hover:bg-secondary/20 transition-colors border-border">
-                                                <TableCell className="font-bold text-foreground text-2xl py-6 px-6">{worker.username}</TableCell>
-                                                <TableCell className="py-6 px-6">
+                                                <TableCell className="font-bold text-foreground text-2xl py-6 px-6 text-center">{worker.username}</TableCell>
+                                                <TableCell className="py-6 px-6 text-center">
                                                     <Badge variant="outline" className="capitalize bg-secondary/50 text-foreground border-none font-bold px-6 py-3 rounded-full text-sm tracking-wider uppercase">
                                                         {worker.role}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="py-6 px-6">
+                                                <TableCell className="py-6 px-6 text-center">
                                                     {worker.status === "active" ? (
                                                         <Badge className="bg-success/10 text-success hover:bg-success/20 border-success/20 px-6 py-3 font-bold rounded-full text-sm tracking-wider uppercase">
                                                             Actif

@@ -375,6 +375,10 @@ export async function initDb() {
                     await database.execute("ALTER TABLE products ADD COLUMN sizeStock TEXT");
                 } catch (e) { /* ignore if already exists */ }
 
+                try {
+                    await database.execute("ALTER TABLE sales ADD COLUMN originalSaleId TEXT");
+                } catch (e) { /* ignore if already exists */ }
+
                 await migrateLegacyDatabase(database);
 
 
@@ -532,16 +536,32 @@ export async function getSales(monthPrefix?: string): Promise<Sale[]> {
     }
 }
 
+export async function getNextTicketId(): Promise<string> {
+    try {
+        const database = await initDb();
+        const rows = await runSelect<{ id: string }[]>(database, "SELECT id FROM sales WHERE id GLOB '[0-9]*' ORDER BY CAST(id AS INTEGER) DESC LIMIT 1");
+        if (rows.length > 0) {
+            const lastId = parseInt(rows[0].id);
+            return (lastId + 1).toString().padStart(4, '0');
+        }
+        return "0001";
+    } catch (error) {
+        console.error("error getting next ticket id", error);
+        return "0001";
+    }
+}
+
 export async function addSale(sale: Sale) {
     try {
         const database = await initDb();
         await runExecute(
             database,
-            "INSERT OR REPLACE INTO sales (id, type, items, reduction, total, paidAmount, creditAmount, clientId, date, username) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+            "INSERT OR REPLACE INTO sales (id, type, items, reduction, total, paidAmount, creditAmount, clientId, date, username, originalSaleId) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
             [
                 sale.id, sale.type, JSON.stringify(sale.items),
                 sale.reduction, sale.total, sale.paidAmount,
-                sale.creditAmount, sale.clientId || null, sale.date, sale.username || null
+                sale.creditAmount, sale.clientId || null, sale.date, sale.username || null,
+                sale.originalSaleId || null
             ]
         );
     } catch (error) {
@@ -809,6 +829,20 @@ export async function updateUserStatus(id: string, status: "active" | "inactive"
         await database.execute("UPDATE users SET status = $1 WHERE id = $2", [status, id]);
     } catch (error) {
         console.error("error updating user status", error);
+        throw error;
+    }
+}
+
+export async function updateUser(user: User) {
+    try {
+        const database = await initDb();
+        await runExecute(
+            database,
+            "UPDATE users SET username = $1, password = $2, role = $3, status = $4 WHERE id = $5",
+            [user.username, user.password, user.role, user.status, user.id]
+        );
+    } catch (error) {
+        console.error("error updating user", error);
         throw error;
     }
 }

@@ -40,7 +40,7 @@ export interface CustomSaleCard {
 
 export interface Sale {
     id: string;
-    type: "direct" | "credit";
+    type: "direct" | "credit" | "return";
     items: CartItem[];
     reduction: number;
     total: number;
@@ -49,6 +49,7 @@ export interface Sale {
     clientId?: string;
     date: string;
     username?: string;
+    originalSaleId?: string;
 }
 
 export interface Client {

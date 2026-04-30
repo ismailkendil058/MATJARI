@@ -53,16 +53,24 @@ export default function AnalytiquePage() {
 
   const monthlyPayments = payments;
 
-  const totalRevenue = monthlySales.reduce((s, sale) => s + sale.total, 0);
+  const totalRevenue = monthlySales.reduce((s, sale) => {
+    return sale.type === 'return' ? s - Math.abs(sale.total) : s + sale.total;
+  }, 0);
   const totalPaymentCredits = monthlyPayments.reduce((s, p) => s + p.amount, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const directCash = monthlySales.reduce((s, sale) => s + (sale.paidAmount || 0), 0);
+  const directCash = monthlySales.reduce((s, sale) => {
+    if (sale.type === 'return') return s - Math.abs(sale.paidAmount || 0);
+    return s + (sale.paidAmount || 0);
+  }, 0);
   const venteEncaisser = directCash + totalPaymentCredits - totalExpenses;
   const venteCredit = totalRevenue - (directCash + totalPaymentCredits);
   const totalCost = monthlySales.reduce((s, sale) => {
-    return s + sale.items.reduce((is, item) => is + getItemPurchaseCost(item), 0);
+    const saleCost = sale.items.reduce((is, item) => is + getItemPurchaseCost(item), 0);
+    return sale.type === 'return' ? s - Math.abs(saleCost) : s + saleCost;
   }, 0);
-  const totalReduction = monthlySales.reduce((s, sale) => s + (sale.reduction || 0), 0);
+  const totalReduction = monthlySales.reduce((s, sale) => {
+    return sale.type === 'return' ? s - Math.abs(sale.reduction || 0) : s + (sale.reduction || 0);
+  }, 0);
   const profit = totalRevenue - totalCost - totalExpenses;
   const totalCaisse = venteEncaisser;
 
@@ -110,13 +118,19 @@ export default function AnalytiquePage() {
         expenses: []
       };
 
-      existing.revenue += sale.total;
-      existing.cost += sale.items.reduce((s, i) => s + getItemPurchaseCost(i), 0);
-      existing.totalReduction = (existing.totalReduction || 0) + (sale.reduction || 0);
-      if (sale.type === "credit") {
-        existing.creditCount += 1;
+      if (sale.type === 'return') {
+        existing.revenue -= Math.abs(sale.total);
+        existing.cost -= Math.abs(sale.items.reduce((s, i) => s + getItemPurchaseCost(i), 0));
+        existing.totalReduction = (existing.totalReduction || 0) - Math.abs(sale.reduction || 0);
       } else {
-        existing.directCount += 1;
+        existing.revenue += sale.total;
+        existing.cost += sale.items.reduce((s, i) => s + getItemPurchaseCost(i), 0);
+        existing.totalReduction = (existing.totalReduction || 0) + (sale.reduction || 0);
+        if (sale.type === "credit") {
+          existing.creditCount += 1;
+        } else {
+          existing.directCount += 1;
+        }
       }
 
       sale.items.forEach(item => existing.productNames.add(item.product.name));
@@ -216,26 +230,26 @@ export default function AnalytiquePage() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in">
           <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Ventes Totales</p>
-          <p className="text-4xl lg:text-5xl font-black text-[#3f5362] tracking-tighter">{formatDZD(totalRevenue)}</p>
+          <p className="text-3xl font-black text-[#3f5362] tracking-tighter">{formatDZD(totalRevenue)}</p>
         </div>
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '100ms' }}>
           <p className="text-xs font-black text-[#41b86d] uppercase tracking-widest mb-3">Vente Encaissée</p>
-          <p className="text-4xl lg:text-5xl font-black text-[#41b86d] tracking-tighter">{formatDZD(venteEncaisser)}</p>
+          <p className="text-3xl font-black text-[#41b86d] tracking-tighter">{formatDZD(venteEncaisser)}</p>
         </div>
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '200ms' }}>
           <p className="text-xs font-black text-red-500 uppercase tracking-widest mb-3">Vente Crédit</p>
-          <p className="text-4xl lg:text-5xl font-black text-red-500 tracking-tighter">{formatDZD(venteCredit)}</p>
+          <p className="text-3xl font-black text-red-500 tracking-tighter">{formatDZD(venteCredit)}</p>
         </div>
         <div className={`rounded-3xl p-8 shadow-sm border flex flex-col justify-center animate-scale-in bg-white`} style={{ animationDelay: '300ms', borderColor: '#e6f4ea' }}>
           <p className={`text-xs font-black uppercase tracking-widest mb-3 ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>Bénéfices</p>
-          <p className={`text-4xl lg:text-5xl font-black tracking-tighter ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>{formatDZD(profit)}</p>
+          <p className={`text-3xl font-black tracking-tighter ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>{formatDZD(profit)}</p>
           {totalRevenue > 0 && (
             <p className="text-sm mt-3 text-gray-500 font-bold">Marge: {(profit / totalRevenue * 100).toFixed(1)}%</p>
           )}
         </div>
         <div className="bg-white rounded-3xl p-8 shadow-sm border flex flex-col justify-center animate-scale-in" style={{ animationDelay: '400ms', borderColor: '#fca5a5' }}>
           <p className="text-xs font-black text-orange-500 uppercase tracking-widest mb-3">Dépenses / Réduc</p>
-          <p className="text-4xl lg:text-5xl font-black text-orange-500 tracking-tighter">{formatDZD(totalExpenses + totalReduction)}</p>
+          <p className="text-3xl font-black text-orange-500 tracking-tighter">{formatDZD(totalExpenses + totalReduction)}</p>
           <div className="flex gap-4 text-xs mt-3 font-bold text-gray-400">
             <span>Dép: {formatDZD(totalExpenses)}</span>
             <span>Réd: {formatDZD(totalReduction)}</span>
@@ -308,7 +322,7 @@ export default function AnalytiquePage() {
                             {sale.username && <span className="ml-3 text-[11px] font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-lg">VENTE PAR {sale.username.toUpperCase()}</span>}
                           </td>
                           <td className="px-8 py-4 text-center">
-                            <span className={`text-[10px] font-black px-3 py-1 rounded-full tracking-widest ${sale.type === 'credit' ? 'bg-red-50 text-red-500' : 'bg-[#41b86d]/10 text-[#41b86d]'}`}>
+                            <span className={`text-[10px] font-black px-3 py-1 rounded-full tracking-widest ${sale.type === 'credit' ? 'bg-red-50 text-red-500' : sale.type === 'return' ? 'bg-orange-50 text-orange-500' : 'bg-[#41b86d]/10 text-[#41b86d]'}`}>
                               {sale.type.toUpperCase()}
                             </span>
                           </td>
@@ -316,8 +330,8 @@ export default function AnalytiquePage() {
                             {sale.items.map(i => i.product.name).join(", ")}
                           </td>
                           <td className="px-8 py-4 text-right font-black text-gray-600 flex flex-col items-end">
-                            <span className="text-lg">{formatDZD(sale.total)}</span>
-                            {sale.reduction > 0 && <span className="text-[10px] text-red-500 mt-1">- {formatDZD(sale.reduction)} RÉDUCTION</span>}
+                            <span className="text-lg">{sale.type === 'return' ? '-' : ''}{formatDZD(sale.total)}</span>
+                            {sale.reduction > 0 && <span className="text-[10px] text-red-500 mt-1">{sale.type === 'return' ? '+' : '-'}{formatDZD(sale.reduction)} RÉDUCTION</span>}
                           </td>
                         </tr>
                       ))}

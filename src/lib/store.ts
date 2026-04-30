@@ -6,7 +6,7 @@ export function generateId(): string {
 }
 
 export function formatDZD(amount: number): string {
-  return new Intl.NumberFormat("fr-DZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount) + " DZD";
+  return new Intl.NumberFormat("fr-DZ", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount) + " DZD";
 }
 
 export const CATEGORIES: { key: CategoryType; label: string; labelAr: string }[] = [

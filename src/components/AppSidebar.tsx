@@ -30,25 +30,25 @@ export function AppSidebar() {
   const currentNavItems = user?.role === "admin" ? adminNavItems : navItems;
 
   return (
-    <aside className="w-80 h-screen sticky top-0 bg-white flex flex-col border-r border-gray-200 shadow-sm z-20 font-sans overflow-y-auto no-scrollbar">
+    <aside className="w-64 h-screen sticky top-0 bg-white flex flex-col border-r border-gray-200 shadow-sm z-20 font-sans overflow-y-auto no-scrollbar">
       {/* Logout button top left as requested */}
       <div className="p-5 border-b border-gray-100 bg-gray-50/30">
         <Button
           variant="ghost"
           size="default"
           onClick={handleLogout}
-          className="w-full flex items-center justify-start gap-4 text-primary hover:bg-primary/10 hover:text-primary/90 font-black text-xl py-8"
+          className="w-full flex items-center justify-start gap-3 text-primary hover:bg-primary/10 hover:text-primary/90 font-black text-lg py-6"
         >
-          <LogOut className="h-7 w-7" />
+          <LogOut className="h-6 w-6" />
           <span>Déconnecter</span>
         </Button>
       </div>
 
       {/* Logo */}
-      <div className="px-8 py-12 border-b border-gray-100 flex flex-col items-start">
-        <h1 className="text-[44px] font-black tracking-tighter leading-none">
+      <div className="px-6 py-10 border-b border-gray-100 flex flex-col items-start">
+        <h1 className="text-[36px] font-black tracking-tighter leading-none">
           <span className="text-primary">Matjari</span> <br />
-          <span className="text-gray-400 text-3xl font-bold uppercase tracking-[0.2em] mt-2">متجري</span>
+          <span className="text-gray-400 text-2xl font-bold uppercase tracking-[0.2em] mt-2">متجري</span>
         </h1>
         {user && (
           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-6">
@@ -66,13 +66,13 @@ export function AppSidebar() {
               key={item.url}
               to={item.url}
               end
-              className={`flex items-center gap-5 px-6 py-5 rounded-2xl text-xl transition-all duration-200 group font-black ${isActive
+              className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-lg transition-all duration-200 group font-black ${isActive
                 ? "bg-primary text-white shadow-xl shadow-primary/30 hover:-translate-y-1"
                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               activeClassName=""
             >
-              <item.icon className={`h-8 w-8 ${isActive ? "text-white" : "text-gray-400 group-hover:text-primary"}`} strokeWidth={isActive ? 3 : 2} />
+              <item.icon className={`h-7 w-7 ${isActive ? "text-white" : "text-gray-400 group-hover:text-primary"}`} strokeWidth={isActive ? 3 : 2} />
               <span className="tracking-wide">{item.title}</span>
             </NavLink>
           );
