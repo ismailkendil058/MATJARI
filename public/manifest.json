@@ -12,19 +12,19 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/download (2).jpg",
+            "src": "/Store Icon - Noun Project (1).jpg",
             "sizes": "192x192",
             "type": "image/jpeg",
             "purpose": "any"
         },
         {
-            "src": "/download (2).jpg",
+            "src": "/Store Icon - Noun Project (1).jpg",
             "sizes": "512x512",
             "type": "image/jpeg",
             "purpose": "any"
         },
         {
-            "src": "/download (2).jpg",
+            "src": "/Store Icon - Noun Project (1).jpg",
             "sizes": "512x512",
             "type": "image/jpeg",
             "purpose": "maskable"

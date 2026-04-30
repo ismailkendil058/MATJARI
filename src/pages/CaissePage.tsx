@@ -672,11 +672,11 @@ export default function CaissePage() {
         </div>
 
         {/* Search */}
-        <div className="relative mb-4 bg-white rounded-md shadow-sm border border-border">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <div className="relative mb-6 bg-white rounded-xl shadow-sm border border-border">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
           <Input
             placeholder="Rechercher des produits..."
-            className="pl-11 bg-transparent border-0 h-11 text-sm focus-visible:ring-0 shadow-none text-foreground"
+            className="pl-14 bg-transparent border-0 h-16 text-lg focus-visible:ring-0 shadow-none text-foreground"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -692,8 +692,8 @@ export default function CaissePage() {
                   onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
                   className={`flex-1 min-w-[72px] aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-1 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
                 >
-                  <div className="font-black text-sm md:text-lg tracking-wider text-center leading-tight">{cat.labelAr}</div>
-                  <span className="font-bold text-[9px] md:text-[10px] opacity-75 tracking-widest text-center uppercase mx-auto">{cat.label}</span>
+                  <div className="font-black text-lg md:text-2xl tracking-wider text-center leading-tight">{cat.labelAr}</div>
+                  <span className="font-bold text-[10px] md:text-xs opacity-75 tracking-widest text-center uppercase mx-auto">{cat.label}</span>
                 </button>
               );
             })}
@@ -709,31 +709,31 @@ export default function CaissePage() {
                 <div
                   key={product.id}
                   onClick={() => handleProductClick(product)}
-                  className="bg-white border border-border rounded-lg p-2.5 md:p-2.5 text-left hover:border-accent hover:shadow-md transition-all duration-200 group relative flex flex-col min-h-[172px] md:min-h-[160px] items-center justify-between cursor-pointer"
+                  className="bg-white border border-border rounded-xl p-4 text-left hover:border-accent hover:shadow-lg transition-all duration-200 group relative flex flex-col min-h-[220px] items-center justify-between cursor-pointer"
                 >
 
-                  <span className="absolute top-2 right-2 text-[10px] font-semibold bg-secondary text-muted-foreground px-1.5 py-0.5 rounded">
+                  <span className="absolute top-3 right-3 text-xs font-bold bg-secondary text-muted-foreground px-2 py-1 rounded-md">
                     {product.stock}
                   </span>
                   {showCustom && (
                     <button
                       type="button"
                       onClick={e => { e.stopPropagation(); openCustomModal(product); }}
-                      className="absolute left-2 top-2 h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center shadow-md transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                      className="absolute left-3 top-3 h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                       disabled={product.stock <= 0}
                     >
-                      <Plus className="h-4 w-4" strokeWidth={2} />
+                      <Plus className="h-6 w-6" strokeWidth={2.5} />
                     </button>
                   )}
-                  <div className="flex-1 flex items-center justify-center pt-3 pb-1 w-full pointer-events-none">
+                  <div className="flex-1 flex items-center justify-center pt-6 pb-2 w-full pointer-events-none">
                     {(() => {
                       const ProductIcon = categoryIcons[product.category] || Package;
-                      return <ProductIcon className="h-11 w-11 md:h-[54px] md:w-[54px] text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all drop-shadow-sm" strokeWidth={1.5} />;
+                      return <ProductIcon className="h-20 w-20 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all drop-shadow-sm" strokeWidth={1} />;
                     })()}
                   </div>
-                  <div className="w-full border-t border-border pt-2 flex flex-col h-12 justify-end">
-                    <p className="text-[11px] md:text-[11px] font-medium text-foreground leading-tight mb-1 line-clamp-2 text-center" title={product.name}>{product.name}</p>
-                    <p className="text-sm font-bold text-primary text-center">{formatDZD(product.priceSale)}</p>
+                  <div className="w-full border-t border-border pt-3 flex flex-col h-16 justify-end">
+                    <p className="text-sm font-bold text-foreground leading-tight mb-2 line-clamp-2 text-center" title={product.name}>{product.name}</p>
+                    <p className="text-xl font-black text-primary text-center">{formatDZD(product.priceSale)}</p>
                   </div>
                 </div>
               );
@@ -776,17 +776,17 @@ export default function CaissePage() {
         </div>
 
         {/* Category filters */}
-        <div className="hidden gap-2 pt-2 border-t border-border pb-1 lg:flex w-full">
-          <div className="flex w-full gap-2">
+        <div className="hidden gap-2 pt-2 border-t border-border pb-2 lg:flex w-full overflow-x-auto">
+          <div className="flex w-full gap-2 px-1">
             {CATEGORIES.map(cat => {
               return (
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
-                  className={`flex-1 aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-2 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  className={`flex-1 aspect-square rounded-xl transition-all flex flex-col items-center justify-center p-1.5 shadow-sm border border-transparent ${categoryColors[cat.key as CategoryType]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
                 >
-                  <div className="font-black text-xl md:text-2xl tracking-wider text-center leading-tight">{cat.labelAr}</div>
-                  <span className="font-bold text-xs md:text-sm opacity-80 tracking-widest text-center uppercase mt-1 mx-auto">{cat.label}</span>
+                  <div className="font-black text-lg md:text-xl tracking-wider text-center leading-tight">{cat.labelAr}</div>
+                  <span className="font-bold text-[9px] md:text-[11px] opacity-70 tracking-widest text-center uppercase mx-auto">{cat.label}</span>
                 </button>
               );
             })}
@@ -796,20 +796,20 @@ export default function CaissePage() {
 
       {/* Right panel — Cart */}
       <div className={`${mobileSection === "products" ? "hidden" : ""} flex w-full flex-col bg-white border-l border-border z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.02)] lg:flex lg:w-[400px] xl:w-[440px] lg:h-screen lg:sticky lg:top-0`}>
-        <div className="flex items-center justify-between p-5 border-b border-border bg-white">
-          <h3 className="text-xl font-bold tracking-tight text-foreground">Panier</h3>
-          <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary px-2 text-sm font-bold text-white lg:hidden">
+        <div className="flex items-center justify-between p-6 border-b border-border bg-white">
+          <h3 className="text-2xl font-black tracking-tight text-foreground">Panier</h3>
+          <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-full bg-primary px-3 text-lg font-black text-white lg:hidden">
             {mobileCartCount}
           </span>
         </div>
 
-        <div className="p-3 border-b border-border bg-white">
+        <div className="p-4 border-b border-border bg-white">
           <Input
-            placeholder="Scanner / entrer code-barre et Appuyer Entrée"
+            placeholder="Scanner / entrer code-barre..."
             value={barcodeInput}
             onChange={e => setBarcodeInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleAddByBarcode(); }}
-            className="h-10"
+            className="h-14 text-lg"
           />
         </div>
 
@@ -823,33 +823,33 @@ export default function CaissePage() {
           ) : (
             <div className="divide-y divide-border p-2">
               {cart.map((item, idx) => (
-                <div key={`${item.product.id}-${idx}`} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm border border-border mb-2 group transition-all hover:border-accent">
+                <div key={`${item.product.id}-${idx}`} className="flex items-center gap-4 bg-white rounded-xl p-4 shadow-sm border border-border mb-3 group transition-all hover:border-accent">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-base font-bold text-foreground truncate">
                       {item.product.name}
-                      {item.size && <span className="ml-1.5 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-bold">{item.size}</span>}
+                      {item.size && <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-md text-[11px] font-black">{item.size}</span>}
                     </p>
                     {item.customUnitPrice ? (
-                      <p className="text-[10px] text-primary mt-1 font-semibold">
+                      <p className="text-xs text-primary mt-1 font-bold">
                         {item.weightKg ?? item.quantity} × {formatDZD(item.customUnitPrice)}
                       </p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-0.5">{formatDZD(item.product.priceSale)}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{formatDZD(item.product.priceSale)}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => updateQty(item.product.id, -1)} className="h-7 w-7 rounded-sm bg-secondary border border-border flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors">
-                      <Minus className="h-3 w-3" />
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => updateQty(item.product.id, -1)} className="h-10 w-10 rounded-md bg-secondary border border-border flex items-center justify-center hover:bg-muted text-muted-foreground transition-all active:scale-95">
+                      <Minus className="h-5 w-5" />
                     </button>
-                    <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
-                    <button onClick={() => updateQty(item.product.id, 1)} className="h-7 w-7 rounded-sm bg-secondary border border-border flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors">
-                      <Plus className="h-3 w-3" />
+                    <span className="w-10 text-center text-lg font-black text-foreground">{item.quantity}</span>
+                    <button onClick={() => updateQty(item.product.id, 1)} className="h-10 w-10 rounded-md bg-secondary border border-border flex items-center justify-center hover:bg-muted text-muted-foreground transition-all active:scale-95">
+                      <Plus className="h-5 w-5" />
                     </button>
                   </div>
-                  <div className="flex flex-col items-end gap-1 ml-2">
-                    <p className="text-sm font-bold text-foreground">{formatDZD(item.subtotal)}</p>
-                    <button onClick={() => removeItem(item.product.id)} className="text-muted-foreground hover:text-destructive transition-colors bg-white">
-                      <Trash2 className="h-4 w-4" />
+                  <div className="flex flex-col items-end gap-2 ml-3">
+                    <p className="text-lg font-black text-foreground">{formatDZD(item.subtotal)}</p>
+                    <button onClick={() => removeItem(item.product.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1.5 hover:bg-red-50 rounded-md">
+                      <Trash2 className="h-5 w-5" />
                     </button>
                   </div>
                 </div>
@@ -879,15 +879,15 @@ export default function CaissePage() {
 
           <div className="h-px bg-border w-full" />
 
-          <div className="flex justify-between items-end pb-2">
+          <div className="flex justify-between items-end pb-4">
             <div>
-              <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider block mb-1">Total à payer</span>
+              <span className="text-muted-foreground text-sm font-bold uppercase tracking-wider block mb-2">Total à payer</span>
             </div>
-            <span className="text-3xl font-black text-primary tracking-tight">{formatDZD(total)}</span>
+            <span className="text-5xl font-black text-primary tracking-tight">{formatDZD(total)}</span>
           </div>
 
           <Button
-            className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-white shadow-lg hover:-translate-y-0.5 transition-all rounded-lg disabled:opacity-50"
+            className="w-full h-20 text-2xl font-black bg-primary hover:bg-primary/90 text-white shadow-xl hover:-translate-y-1 transition-all rounded-2xl disabled:opacity-50"
             disabled={cart.length === 0}
             onClick={() => setShowCheckout(true)}
           >
@@ -898,86 +898,89 @@ export default function CaissePage() {
 
       {/* Checkout modal */}
       <Dialog open={showCheckout} onOpenChange={(open) => { setShowCheckout(open); if (!open) setShowCreditDetails(false); }}>
-        <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold border-b border-border pb-3">Encaissement</DialogTitle>
+        <DialogContent className="sm:max-w-xl bg-white border-0 shadow-2xl rounded-[2.5rem] p-0 overflow-hidden">
+          <DialogHeader className="p-8 border-b border-gray-100 bg-gray-50/50">
+            <DialogTitle className="text-3xl font-black text-[#3f5362] uppercase tracking-wide">Encaissement</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 pt-4">
-            <div className="bg-secondary/20 border border-border p-6 rounded-xl">
-              <p className="text-center text-3xl font-black text-primary">{formatDZD(total)}</p>
+          <div className="p-8 space-y-8">
+            <div className="bg-secondary/20 border border-border p-12 rounded-[2rem] flex flex-col items-center justify-center">
+              <p className="text-xs font-black text-gray-400 uppercase tracking-[0.25em] mb-3">Total à payer</p>
+              <p className="text-6xl font-black text-primary tracking-tighter">{formatDZD(total)}</p>
             </div>
 
             {!showCreditDetails ? (
               <>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="h-20 flex-col gap-2 rounded-xl border-border hover:border-primary hover:bg-primary/5 transition-all text-foreground" onClick={() => handleCheckout('direct')}>
-                    <span className="text-sm font-bold">Vente Directe</span>
+                <div className="grid grid-cols-2 gap-6">
+                  <Button variant="outline" className="h-44 flex-col gap-4 rounded-3xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-foreground group" onClick={() => handleCheckout('direct')}>
+                    <span className="text-2xl font-black group-hover:scale-110 transition-transform">Vente Directe</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Paiement Cash</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col gap-2 rounded-xl border-primary text-primary hover:bg-primary/5 transition-all" onClick={() => setShowCreditDetails(true)}>
-                    <span className="text-sm font-bold uppercase tracking-widest">Crédit</span>
+                  <Button variant="outline" className="h-44 flex-col gap-4 rounded-3xl border-2 border-primary text-primary hover:bg-primary/5 transition-all group" onClick={() => setShowCreditDetails(true)}>
+                    <span className="text-2xl font-black uppercase tracking-widest group-hover:scale-110 transition-transform">Crédit</span>
+                    <span className="text-xs font-bold text-primary/60 uppercase tracking-widest">Dette Client</span>
                   </Button>
                 </div>
-                <div className="pt-2">
+                <div className="pt-4">
                   <Button
                     variant="ghost"
-                    className="w-full h-12 border border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5"
+                    className="w-full h-20 border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center gap-4 text-gray-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
                     onClick={handlePrintReceipt}
                   >
-                    <Printer className="h-5 w-5" />
-                    <span className="font-bold">Imprimer Ticket d'achat</span>
+                    <Printer className="h-8 w-8" />
+                    <span className="text-xl font-black uppercase tracking-widest">Imprimer Ticket</span>
                   </Button>
                 </div>
               </>
             ) : (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Informations Crédit</h4>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6">
+                <div className="space-y-4">
+                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-4 pl-1">Informations Crédit</h4>
                   <div className="relative">
                     <Input
-                      placeholder="Nom du client"
-                      className="bg-secondary/20 border-border h-11"
+                      placeholder="Nom du client..."
+                      className="bg-secondary/10 border-gray-200 h-20 text-2xl font-black rounded-2xl px-6 focus:ring-primary shadow-none"
                       value={clientName}
                       onChange={e => handleClientInput(e.target.value)}
                     />
                     {matchingClients.length > 0 && (
-                      <div className="absolute top-full left-0 w-full bg-white border border-border rounded-xl shadow-lg z-[100] mt-1 overflow-hidden">
+                      <div className="absolute top-full left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-[100] mt-2 overflow-hidden border-2">
                         {matchingClients.map(c => (
                           <button
                             key={c.id}
-                            className="w-full text-left px-4 py-3 hover:bg-secondary/50 text-sm flex justify-between items-center"
+                            className="w-full text-left px-6 py-5 hover:bg-primary/5 hover:text-primary transition-colors text-lg flex justify-between items-center border-b last:border-0 border-gray-50"
                             onClick={() => selectClient(c)}
                           >
-                            <span className="font-bold">{c.name}</span>
-                            <span className="text-xs text-red-500 font-black">Reste: {formatDZD(c.balance)}</span>
+                            <span className="font-black">{c.name}</span>
+                            <span className="px-3 py-1 bg-red-50 text-red-500 rounded-lg text-xs font-black">DETTE: {formatDZD(c.balance)}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                  <Input placeholder="Numéro de téléphone" className="bg-secondary/20 border-border h-11" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+                  <Input placeholder="Numéro de téléphone" className="bg-secondary/10 border-gray-200 h-16 text-lg font-bold rounded-2xl px-6 shadow-none" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
 
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Somme payée maintenant (0 si tout à crédit)</p>
+                  <div className="space-y-3 pt-6 border-t border-gray-100">
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest pl-1">Somme payée maintenant (optionnel)</p>
                     <Input
                       type="number"
-                      placeholder="0 DZD"
-                      className="bg-secondary/20 border-border h-11 text-lg font-black"
+                      placeholder="0.00 DZD"
+                      className="bg-primary/5 border-primary/20 h-20 text-4xl font-black text-primary rounded-2xl px-6 shadow-none"
                       value={paidNow}
                       onChange={e => setPaidNow(e.target.value)}
                     />
                   </div>
 
-                  <div className="bg-primary/5 p-3 rounded-lg border border-primary/20 space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-muted-foreground">À ajouter au crédit:</span>
-                      <span className="text-red-600 font-black">{formatDZD(Math.max(0, total - (Number(paidNow) || 0)))}</span>
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                    <div className="flex justify-between text-lg font-black">
+                      <span className="text-gray-400 uppercase tracking-widest text-xs mt-1">À ajouter au crédit :</span>
+                      <span className="text-red-500 text-3xl tracking-tighter">{formatDZD(Math.max(0, total - (Number(paidNow) || 0)))}</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button variant="ghost" className="flex-1 h-12 font-bold" onClick={() => setShowCreditDetails(false)}>Retour</Button>
+                  <div className="flex gap-4 pt-6">
+                    <Button variant="ghost" className="flex-1 h-20 text-xl font-bold rounded-2xl text-gray-400" onClick={() => setShowCreditDetails(false)}>Précédent</Button>
                     <Button
-                      className="flex-[2] h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg"
+                      className="flex-[2] h-20 bg-primary hover:bg-primary/90 text-white font-black text-2xl rounded-2xl shadow-xl shadow-primary/20 transition-all hover:-translate-y-1"
                       onClick={() => handleCheckout('credit', Number(paidNow) || 0)}
                       disabled={!clientName}
                     >
@@ -986,11 +989,11 @@ export default function CaissePage() {
                   </div>
                   <Button
                     variant="ghost"
-                    className="w-full h-12 border border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5"
+                    className="w-full h-16 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center gap-3 text-gray-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all mt-2"
                     onClick={handlePrintReceipt}
                   >
-                    <Printer className="h-5 w-5" />
-                    <span className="font-bold">Imprimer Ticket d'achat</span>
+                    <Printer className="h-6 w-6" />
+                    <span className="text-lg font-black uppercase tracking-widest">Imprimer Ticket</span>
                   </Button>
                 </div>
               </div>

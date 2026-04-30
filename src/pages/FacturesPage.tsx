@@ -552,32 +552,31 @@ export default function FacturesPage() {
   if (view === "add") {
     return (
       <div className="flex h-screen flex-col bg-white text-slate-800 font-sans overflow-hidden animate-fade-in">
-        <header className="h-14 border-b bg-slate-50 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => { resetAddForm(); setView("list"); }} className="h-8 w-8 p-0 rounded-lg hover:bg-slate-200">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="font-bold text-slate-800 uppercase tracking-tight text-sm">Saisie Facture Achat</h1>
-          </div>
+        <header className="h-20 border-b bg-slate-50 flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => { resetAddForm(); setView("list"); }} className="h-12 w-12 p-0 rounded-xl hover:bg-slate-200 transition-all">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="font-black text-slate-800 uppercase tracking-tight text-3xl">Saisie Facture Achat</h1>
+          </div>
+          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black uppercase text-slate-400 leading-none">Date de l'opération</span>
+              <span className="text-xs font-black uppercase text-slate-400 leading-none mb-1">Date de l'opération</span>
               <input
                 type="date"
                 value={invoiceDate}
                 onChange={e => setInvoiceDate(e.target.value)}
-                className="bg-transparent border-0 outline-none text-sm font-bold text-slate-900 border-b border-transparent hover:border-slate-200 transition-all text-right"
+                className="bg-transparent border-0 outline-none text-xl font-black text-slate-900 border-b-2 border-transparent hover:border-slate-200 transition-all text-right"
               />
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto bg-slate-50/20 p-6 flex flex-col gap-6">
+        <div className="flex-1 overflow-auto bg-slate-50/20 p-10 flex flex-col gap-8">
           {/* SECTION 1: HEADER (Fournisseur) */}
-          <div className="bg-white border rounded-xl p-5 shadow-sm max-w-[1750px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-
-            <div className="space-y-1.5 flex-1 relative">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1">Fournisseur (Optionnel)</label>
+          <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-sm max-w-[1750px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
+            <div className="space-y-3 flex-1 relative">
+              <label className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] pl-1">Fournisseur (Optionnel)</label>
               <Input
                 placeholder="Nom du fournisseur..."
                 value={supplierName}
@@ -590,10 +589,10 @@ export default function FacturesPage() {
                   }
                 }}
                 onFocus={() => setShowSupplierSuggestions(true)}
-                className="h-11 border-slate-200 rounded-lg font-bold"
+                className="h-16 border-slate-200 rounded-2xl font-black text-xl px-6"
               />
               {showSupplierSuggestions && supplierSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden border-2">
                   {supplierSuggestions.map(s => (
                     <button
                       key={s.id}
@@ -603,31 +602,29 @@ export default function FacturesPage() {
                         setSupplierId(s.id);
                         setShowSupplierSuggestions(false);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b last:border-0 border-slate-100 transition-colors flex items-center justify-between"
+                      className="w-full text-left px-6 py-4 hover:bg-primary/5 border-b last:border-0 border-slate-50 transition-colors flex items-center justify-between"
                     >
-                      <p className="font-bold text-sm text-slate-900">{s.name}</p>
-                      <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{s.phone || "No phone"}</p>
+                      <p className="font-black text-lg text-slate-900">{s.name}</p>
+                      <p className="text-xs uppercase font-black text-slate-400 tracking-widest">{s.phone || "No phone"}</p>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-end gap-2 text-slate-400 italic text-[11px] font-bold pb-2">
-              <Package className="h-3 w-3" />
+            <div className="flex items-center justify-end gap-3 text-slate-400 italic text-sm font-bold pb-4">
+              <Package className="h-5 w-5" />
               Stock Management actif pour cette facture
             </div>
           </div>
 
           {/* SECTION 2: ADD PRODUCT ENTRY BAR */}
-          <div className="bg-white border rounded-xl p-5 shadow-sm max-w-[1750px] mx-auto w-full">
-
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1 block mb-3">Ajouter un produit à la facture</label>
-            <div className="flex items-end gap-3 flex-wrap md:flex-nowrap">
+          <div className="bg-white border border-gray-100 rounded-[2rem] p-10 shadow-sm max-w-[1750px] mx-auto w-full">
+            <label className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] pl-1 block mb-6">Ajouter un produit à la facture</label>
+            <div className="flex items-end gap-5 flex-wrap xl:flex-nowrap">
               {/* Product Name with Suggestions */}
-              <div className="relative flex-1 min-w-[450px] space-y-1.5">
-
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">Désignation Produit</label>
-                <div className="flex items-end gap-2">
+              <div className="relative flex-1 min-w-[500px] space-y-3">
+                <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest pl-1">Désignation Produit</label>
+                <div className="flex items-end gap-3">
                   <Input
                     placeholder="Nom du produit..."
                     value={itemName}
@@ -636,17 +633,17 @@ export default function FacturesPage() {
                       setShowSuggestions(true);
                     }}
                     onFocus={() => setShowSuggestions(true)}
-                    className="h-11 border-slate-200 rounded-lg font-bold focus-visible:ring-slate-200 flex-1"
+                    className="h-16 border-slate-200 rounded-2xl font-black text-xl focus-visible:ring-slate-100 flex-1 px-6 shadow-none"
                   />
                   <Input
                     placeholder="Code-barre (opt.)"
                     value={itemBarcode}
                     onChange={e => setItemBarcode(e.target.value)}
-                    className="h-11 w-36 border-slate-200 rounded-lg text-sm"
+                    className="h-16 w-52 border-slate-200 rounded-2xl text-lg font-bold px-6 shadow-none"
                   />
                 </div>
                 {showSuggestions && nameSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden border-2">
                     {nameSuggestions.map(p => (
                       <button
                         key={p.id}
@@ -659,16 +656,16 @@ export default function FacturesPage() {
                           setItemBarcode(p.barcode || "");
                           setShowSuggestions(false);
                         }}
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b last:border-0 border-slate-100 transition-colors flex items-center justify-between group"
+                        className="w-full text-left px-6 py-5 hover:bg-primary/5 border-b last:border-0 border-slate-50 transition-colors flex items-center justify-between group"
                       >
                         <div>
-                          <p className="font-bold text-sm text-slate-900 group-hover:text-primary transition-colors">{p.name}</p>
+                          <p className="font-black text-xl text-slate-900 group-hover:text-primary transition-colors">{p.name}</p>
                           {p.barcode && (
-                            <p className="text-[10px] text-slate-500 mt-1">Code-barre: {p.barcode}</p>
+                            <p className="text-xs text-slate-500 mt-1 font-bold">Code-barre: {p.barcode}</p>
                           )}
-                          <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{p.category} • Stock: {p.stock}</p>
+                          <p className="text-[11px] uppercase font-black text-slate-400 tracking-widest mt-1">{p.category} • Stock: {p.stock}</p>
                         </div>
-                        <p className="text-xs font-black text-slate-900">{formatDZD(p.priceBuy)}</p>
+                        <p className="text-lg font-black text-slate-900">{formatDZD(p.priceBuy)}</p>
                       </button>
                     ))}
                   </div>
@@ -676,15 +673,15 @@ export default function FacturesPage() {
               </div>
 
               {/* Category selector */}
-              <div className="w-48 space-y-1.5">
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">Catégorie</label>
+              <div className="w-56 space-y-3">
+                <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest pl-1">Catégorie</label>
                 <Select value={itemCategory} onValueChange={(v: CategoryType) => setItemCategory(v)}>
-                  <SelectTrigger className="h-11 border-slate-200 rounded-lg font-bold bg-white">
+                  <SelectTrigger className="h-16 border-slate-200 rounded-2xl font-black bg-white text-lg px-6 shadow-none">
                     <SelectValue placeholder="Catégorie" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-2xl border-2">
                     {CATEGORIES.map(cat => (
-                      <SelectItem key={cat.key} value={cat.key}>
+                      <SelectItem key={cat.key} value={cat.key} className="text-lg py-3">
                         <span>{cat.label}</span>
                       </SelectItem>
                     ))}
@@ -694,64 +691,63 @@ export default function FacturesPage() {
 
               {/* Multi-Size Quantities (Clothing or Shoes) */}
               {SIZE_CATEGORIES.includes(itemCategory) ? (
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   {(itemCategory === "chaussures" ? SHOE_SIZES : SHIRT_SIZES).map(size => (
-                    <div key={size} className={itemCategory === "chaussures" ? "w-11 space-y-1.5 text-center" : "w-14 space-y-1.5 text-center"}>
-                      <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">{size}</label>
+                    <div key={size} className={itemCategory === "chaussures" ? "w-14 space-y-3 text-center" : "w-16 space-y-3 text-center"}>
+                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest block">{size}</label>
                       <Input
                         type="number"
                         value={sizeQtys[size] || ""}
                         onChange={e => setSizeQtys(prev => ({ ...prev, [size]: e.target.value === "" ? 0 : Number(e.target.value) }))}
                         placeholder={size}
-                        className="h-11 text-center font-bold border-slate-200 bg-white p-0"
+                        className="h-16 text-center font-black text-xl border-slate-200 bg-white p-0 rounded-2xl shadow-none"
                       />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="w-24 space-y-1.5">
-                  <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 text-center block">Qté</label>
+                <div className="w-32 space-y-3">
+                  <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest pl-1 text-center block">Qté</label>
                   <Input
                     type="number"
                     value={itemQty}
                     onChange={e => setItemQty(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="Qté"
-                    className="h-11 text-center font-black border-slate-200 bg-slate-50 focus:bg-white"
+                    className="h-16 text-center font-black text-2xl border-slate-200 bg-slate-50 focus:bg-white rounded-2xl shadow-none"
                   />
                 </div>
               )}
 
-
               {/* Prix Achat */}
-              <div className="w-32 space-y-1.5">
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">Prix d'Achat</label>
+              <div className="w-44 space-y-3">
+                <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest pl-1">Prix d'Achat</label>
                 <Input
                   type="number"
                   value={itemBuy}
                   onChange={e => setItemBuy(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder="P. Achat"
-                  className="h-11 font-bold border-slate-200"
+                  className="h-16 font-black text-2xl border-slate-200 rounded-2xl px-6 shadow-none"
                 />
               </div>
 
               {/* Prix Vente */}
-              <div className="w-32 space-y-1.5">
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">Prix de Vente</label>
+              <div className="w-44 space-y-3">
+                <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest pl-1">Prix de Vente</label>
                 <Input
                   type="number"
                   value={itemSale}
                   onChange={e => setItemSale(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder="P. Vente"
-                  className="h-11 font-bold border-slate-200"
+                  className="h-16 font-black text-2xl border-slate-200 rounded-2xl px-6 shadow-none"
                 />
               </div>
 
               {/* Action Button */}
               <Button
                 onClick={handleValidateItem}
-                className="h-11 bg-slate-900 border-2 border-slate-900 hover:bg-primary hover:border-primary text-white px-8 rounded-lg font-black uppercase text-[11px] tracking-widest transition-all"
+                className="h-16 bg-slate-900 border-4 border-slate-900 hover:bg-primary hover:border-primary text-white px-10 rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:-translate-y-1 active:scale-95 shadow-xl shadow-black/10"
               >
-                Valider le produit
+                Valider
               </Button>
             </div>
           </div>
@@ -762,14 +758,14 @@ export default function FacturesPage() {
             <div className="flex-1 overflow-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead className="bg-slate-50 border-b sticky top-0 z-10">
-                  <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    <th className="px-6 py-4 w-12">N°</th>
-                    <th className="px-6 py-4">Article</th>
-                    <th className="px-6 py-4 w-28 text-center">Quantité</th>
-                    <th className="px-6 py-4 w-32">Prix Achat</th>
-                    <th className="px-6 py-4 w-32">Prix Vente</th>
-                    <th className="px-6 py-4 w-32 text-right">Total HT</th>
-                    <th className="px-6 py-4 w-12"></th>
+                  <tr className="text-xs font-black uppercase text-slate-400 tracking-[0.2em]">
+                    <th className="px-8 py-6 w-16">N°</th>
+                    <th className="px-8 py-6">Article</th>
+                    <th className="px-8 py-6 w-36 text-center">Quantité</th>
+                    <th className="px-8 py-6 w-44">Prix Achat</th>
+                    <th className="px-8 py-6 w-44">Prix Vente</th>
+                    <th className="px-8 py-6 w-48 text-right">Total HT</th>
+                    <th className="px-8 py-6 w-16"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -859,23 +855,23 @@ export default function FacturesPage() {
         </div>
 
         {/* SECTION 4: FOOTER (Total & Submit) */}
-        <footer className="h-24 bg-white border-t flex items-center justify-between px-10 shrink-0">
+        <footer className="h-32 bg-white border-t-2 flex items-center justify-between px-12 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
           <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 leading-none mb-1">Total de la facture</span>
-            <p className="text-4xl font-black text-primary tracking-tighter leading-none">{formatDZD(invoiceTotal)}</p>
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 leading-none mb-2">Total de la facture</span>
+            <p className="text-6xl font-black text-primary tracking-tighter leading-none">{formatDZD(invoiceTotal)}</p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-8">
             {invoiceItems.length > 0 && (
-              <button onClick={() => { if (confirm("Effacer toute la facture ?")) setInvoiceItems([]); }} className="text-[10px] font-black uppercase text-slate-400 hover:text-red-500 mr-6 tracking-widest transition-colors">Réinitialiser</button>
+              <button onClick={() => { if (confirm("Effacer toute la facture ?")) setInvoiceItems([]); }} className="text-xs font-black uppercase text-slate-400 hover:text-red-500 tracking-[0.2em] transition-colors">Réinitialiser</button>
             )}
             <Button
               onClick={handleSubmitInvoice}
               disabled={invoiceItems.length === 0}
-              className="h-14 px-12 bg-slate-900 hover:bg-primary text-white text-lg font-black rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-20 flex items-center gap-3"
+              className="h-20 px-16 bg-slate-900 hover:bg-primary text-white text-2xl font-black rounded-[1.5rem] shadow-2xl shadow-black/10 transition-all hover:-translate-y-1 active:scale-[0.98] disabled:opacity-20 flex items-center gap-4"
             >
               Valider la facture
-              <Plus className="h-5 w-5" />
+              <Plus className="h-7 w-7" />
             </Button>
           </div>
         </footer>
@@ -888,34 +884,34 @@ export default function FacturesPage() {
     const desktopView = (
       <div className="flex min-h-screen animate-fade-in bg-white font-sans overflow-hidden">
         {/* Left: Invoice Selection & Products */}
-        <div className="flex-1 flex flex-col border-r border-border bg-white overflow-hidden">
-          <div className="p-5 border-b border-border flex items-center justify-between bg-white">
-            <div className="flex items-center gap-3">
+        <div className="flex-1 flex flex-col border-r-2 border-border bg-white overflow-hidden">
+          <div className="p-8 border-b-2 border-border flex items-center justify-between bg-white">
+            <div className="flex items-center gap-5">
               <button
                 onClick={() => { setReturnInvoiceId(""); setReturnItems([]); setView("list"); }}
-                className="h-9 w-9 flex items-center justify-center rounded-xl bg-secondary/50 hover:bg-secondary text-muted-foreground transition-all"
+                className="h-14 w-14 flex items-center justify-center rounded-2xl bg-secondary/50 hover:bg-secondary text-muted-foreground transition-all"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-7 w-7" />
               </button>
               <div>
-                <h2 className="text-xl font-bold text-foreground">Retour Fournisseur</h2>
+                <h2 className="text-4xl font-black text-[#243740] uppercase tracking-tight">Retour Fournisseur</h2>
               </div>
             </div>
           </div>
 
-          <div className="p-5 space-y-6 flex-1 overflow-auto bg-secondary/10">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-border space-y-4">
-              <div className="flex items-center gap-2">
-                <RotateCcw className="h-4 w-4 text-primary" />
-                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Sélectionner la facture d'origine</span>
+          <div className="p-10 space-y-10 flex-1 overflow-auto bg-slate-50/30">
+            <div className="bg-white p-10 rounded-[2rem] shadow-xl border-2 border-border space-y-6">
+              <div className="flex items-center gap-3">
+                <RotateCcw className="h-6 w-6 text-primary" />
+                <span className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Sélectionner la facture d'origine</span>
               </div>
               <Select value={returnInvoiceId} onValueChange={v => { setReturnInvoiceId(v); setReturnItems([]); }}>
-                <SelectTrigger className="h-12 bg-secondary/30 border-0 rounded-xl">
+                <SelectTrigger className="h-20 bg-secondary/10 border-2 border-border rounded-2xl text-2xl font-black px-8">
                   <SelectValue placeholder="Choisir une facture d'achat..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl border-2">
                   {invoices.filter(i => i.type === "achat").map(i => (
-                    <SelectItem key={i.id} value={i.id}>
+                    <SelectItem key={i.id} value={i.id} className="text-xl py-4">
                       {i.number} — {i.supplier.name} ({i.date})
                     </SelectItem>
                   ))}
@@ -924,25 +920,25 @@ export default function FacturesPage() {
             </div>
 
             {selectedReturnInvoice && (
-              <div className="space-y-4">
-                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground pl-1">Produits de la facture</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-6">
+                <p className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground pl-2 italic">Produits disponibles pour retour :</p>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   {selectedReturnInvoice.items.map((item, idx) => {
                     const currentQty = returnItems.find(r => r.idx === idx)?.quantity || 0;
                     return (
-                      <div key={idx} className="bg-white p-4 rounded-2xl border border-border shadow-sm flex flex-col gap-3 group hover:border-primary/30 transition-all">
+                      <div key={idx} className="bg-white p-8 rounded-[2rem] border-2 border-border shadow-md flex flex-col gap-6 group hover:border-primary/50 transition-all hover:shadow-2xl">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-bold text-foreground">{item.product.name}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Acheté: {item.quantity} units</p>
+                            <p className="font-black text-2xl text-foreground mb-1">{item.product.name}</p>
+                            <span className="px-3 py-1 bg-secondary rounded-lg text-xs font-black uppercase tracking-widest text-muted-foreground">Initial: {item.quantity} units</span>
                           </div>
-                          <p className="text-sm font-black text-primary">{formatDZD(item.priceBuy)}/u</p>
+                          <p className="text-xl font-black text-primary bg-primary/5 px-4 py-2 rounded-xl">{formatDZD(item.priceBuy)}/u</p>
                         </div>
-                        <div className="flex items-center gap-3 bg-secondary/10 p-2 rounded-xl">
-                          <span className="text-[10px] font-black uppercase text-muted-foreground px-2">Qté à retourner</span>
+                        <div className="flex items-center gap-6 bg-secondary/10 p-4 rounded-2xl border border-border/50">
+                          <span className="text-xs font-black uppercase text-muted-foreground px-4 tracking-widest">Retour :</span>
                           <Input
                             type="number"
-                            className="h-9 bg-white border-0 text-center font-bold rounded-lg"
+                            className="h-16 bg-white border-2 border-border text-center text-2xl font-black rounded-xl focus:border-primary px-6 shadow-none"
                             min={0}
                             max={item.quantity}
                             value={currentQty || ""}
@@ -964,53 +960,57 @@ export default function FacturesPage() {
               </div>
             )}
             {!selectedReturnInvoice && (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/30 italic">
-                <RotateCcw className="h-12 w-12 mb-4 opacity-10" />
-                <p>Veuillez sélectionner une facture pour commencer le retour</p>
+              <div className="flex flex-col items-center justify-center py-40 text-muted-foreground/30 italic">
+                <RotateCcw className="h-24 w-24 mb-6 opacity-5" />
+                <p className="text-2xl font-black uppercase tracking-[0.25em]">Veuillez sélectionner une facture</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Right: Return Summary */}
-        <div className="w-[400px] flex flex-col bg-white border-l border-border shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
-          <div className="p-5 border-b border-border">
-            <h3 className="text-xl font-black text-foreground">Récapitulatif Retour</h3>
+        <div className="w-[550px] flex flex-col bg-white border-l-2 border-border shadow-[-20px_0_60px_rgba(0,0,0,0.03)]">
+          <div className="p-8 border-b-2 border-border bg-slate-50/50">
+            <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Récapitulatif</h3>
           </div>
 
-          <div className="flex-1 overflow-auto p-4 space-y-3 bg-secondary/10">
+          <div className="flex-1 overflow-auto p-8 space-y-4 bg-slate-50/20">
             {returnItems.map(ri => {
               const item = selectedReturnInvoice?.items[ri.idx];
               if (!item) return null;
               return (
-                <div key={ri.idx} className="bg-white p-3 rounded-xl border border-border shadow-sm flex items-center justify-between">
-                  <div className="flex-1 min-w-0 pr-3">
-                    <p className="text-sm font-bold truncate">{item.product.name}</p>
-                    <p className="text-[10px] font-bold text-red-500">Retour: {ri.quantity} units</p>
+                <div key={ri.idx} className="bg-white p-6 rounded-2xl border-2 border-border shadow-sm flex items-center justify-between group hover:border-red-200 transition-all">
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="text-xl font-black truncate text-foreground mb-1">{item.product.name}</p>
+                    <p className="text-xs font-black text-red-500 uppercase tracking-widest bg-red-50 px-3 py-1 rounded inline-block">Retour: {ri.quantity} units</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-black text-foreground">{formatDZD(item.priceBuy * ri.quantity)}</p>
+                    <p className="text-2xl font-black text-foreground tracking-tighter">{formatDZD(item.priceBuy * ri.quantity)}</p>
                   </div>
                 </div>
               );
             })}
             {returnItems.length === 0 && (
-              <div className="py-20 text-center text-muted-foreground/30 italic text-sm">Aucun article à retourner</div>
+              <div className="py-40 text-center text-muted-foreground/30 italic flex flex-col items-center gap-4">
+                <Package className="h-12 w-12 opacity-10" />
+                <p className="text-lg font-black uppercase tracking-widest uppercase">Panier vide</p>
+              </div>
             )}
           </div>
 
-          <div className="p-6 border-t border-border bg-white space-y-4">
-            <div className="flex justify-between items-end">
+          <div className="p-10 border-t-2 border-border bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+            <div className="space-y-8">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total à récupérer</span>
-                <p className="text-3xl font-black text-red-500 tracking-tight">{formatDZD(returnTotal)}</p>
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground block mb-2">Montant total à déduire</span>
+                <p className="text-7xl font-black text-red-500 tracking-tighter leading-none">{formatDZD(returnTotal)}</p>
               </div>
               <Button
                 onClick={handleReturn}
                 disabled={returnItems.length === 0}
-                className="h-14 px-8 bg-red-500 hover:bg-red-600 text-white font-black rounded-xl shadow-lg hover:-translate-y-0.5 transition-all"
+                className="w-full h-24 bg-red-500 hover:bg-red-600 text-white font-black text-3xl rounded-[2rem] shadow-2xl shadow-red-200 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-20 flex items-center justify-center gap-4"
               >
                 VALIDER LE RETOUR
+                <RotateCcw className="h-8 w-8" />
               </Button>
             </div>
           </div>
@@ -1110,99 +1110,102 @@ export default function FacturesPage() {
 
   // --- List View (Default) ---
   const desktopList = (
-    <div className="p-8 animate-fade-in bg-white min-h-screen font-sans text-gray-800">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="p-12 animate-fade-in bg-white min-h-screen font-sans text-gray-800">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-12">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-[#243740]">Gestion des Factures</h2>
-          <p className="text-muted-foreground font-medium">Suivez vos achats et retours fournisseurs</p>
+          <h2 className="text-6xl font-black tracking-tight text-[#243740]">Gestion des Factures</h2>
+          <p className="text-xl text-muted-foreground font-bold mt-2">Suivez vos achats et retours fournisseurs</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setView("return")} variant="outline" className="h-12 rounded-xl border-border px-6 hover:bg-white font-bold text-[#243740]">
-            <RotateCcw className="mr-2 h-4 w-4" />
+        <div className="flex gap-4">
+          <Button onClick={() => setView("return")} variant="outline" className="h-16 rounded-2xl border-2 border-border px-8 hover:bg-white font-black text-xl text-[#243740] shadow-sm transition-all hover:border-primary">
+            <RotateCcw className="mr-3 h-6 w-6" />
             Effectuer un Retour
           </Button>
-          <Button onClick={() => setView("add")} className="h-12 rounded-xl bg-[#41b86d] px-6 font-bold text-white hover:bg-[#39a05f] shadow-md">
-            <Plus className="mr-2 h-4 w-4" />
+          <Button onClick={() => setView("add")} className="h-16 rounded-2xl bg-[#41b86d] px-10 font-black text-xl text-white hover:bg-[#39a05f] shadow-xl shadow-green-200 transition-all hover:-translate-y-1">
+            <Plus className="mr-3 h-7 w-7" />
             Nouvel Achat
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+      <div className="flex flex-col md:flex-row gap-6 mb-10">
+        <div className="relative flex-1 max-w-xl">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-7 w-7 text-gray-400" />
           <Input
             placeholder="Rechercher par numéro ou fournisseur..."
-            className="pl-12 bg-white border-border h-12 shadow-sm rounded-xl focus-visible:ring-0 text-sm"
+            className="pl-16 bg-white border-2 border-border h-16 shadow-sm rounded-2xl focus-visible:ring-primary/20 text-xl font-bold"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <Input
           type="date"
-          className="w-full md:w-auto px-4 py-2 h-12 bg-white rounded-xl shadow-sm border border-border text-sm font-bold text-gray-600"
+          className="w-full md:w-auto px-6 h-16 bg-white rounded-2xl shadow-sm border-2 border-border text-xl font-black text-gray-600 focus:border-primary transition-colors"
           value={dateFilter}
           onChange={e => setDateFilter(e.target.value)}
         />
       </div>
 
-      <div className="bg-white border border-border rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm text-center">
-          <thead className="bg-[#f7fbfa] border-b border-border">
-            <tr>
-              <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Numéro</th>
-              <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground text-left">Fournisseur</th>
-              <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Articles</th>
-              <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Total</th>
-              <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Date</th>
-              <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Type</th>
+      <div className="bg-white border-2 border-border rounded-[2.5rem] shadow-xl overflow-hidden">
+        <table className="w-full text-center">
+          <thead className="bg-[#f7fbfa] border-b-2 border-border">
+            <tr className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+              <th className="px-8 py-6">Numéro</th>
+              <th className="px-8 py-6 text-left">Fournisseur</th>
+              <th className="px-8 py-6">Articles</th>
+              <th className="px-8 py-6">Total</th>
+              <th className="px-8 py-6">Date</th>
+              <th className="px-8 py-6">Type</th>
               {user?.role === "admin" && (
-                <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Utilisateurs</th>
+                <th className="px-8 py-6">Utilisateurs</th>
               )}
-              <th className="px-6 py-4"></th>
+              <th className="px-8 py-6 w-20"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y-2 divide-border">
             {filtered.map(inv => (
-              <tr key={inv.id} className="hover:bg-secondary/10 transition-colors group cursor-pointer" onClick={() => setSelectedInvoice(inv)}>
-                <td className="px-6 py-4 font-black text-foreground">{inv.number}</td>
-                <td className="px-6 py-4 text-left">
+              <tr key={inv.id} className="hover:bg-primary/5 transition-all group cursor-pointer" onClick={() => setSelectedInvoice(inv)}>
+                <td className="px-8 py-8 font-black text-2xl text-foreground">{inv.number}</td>
+                <td className="px-8 py-8 text-left">
                   <div className="flex flex-col">
-                    <span className="font-bold text-foreground">{inv.supplier.name}</span>
-                    <span className="text-[10px] text-muted-foreground">{inv.supplier.phone}</span>
+                    <span className="font-black text-2xl text-foreground">{inv.supplier.name}</span>
+                    <span className="text-xs font-bold text-muted-foreground mt-1 tracking-widest uppercase">{inv.supplier.phone || "SANS CONTACT"}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="bg-secondary px-2 py-0.5 rounded-full text-[10px] font-black text-muted-foreground">
+                <td className="px-8 py-8">
+                  <span className="bg-secondary/50 px-4 py-2 rounded-xl text-xs font-black text-muted-foreground uppercase tracking-widest">
                     {inv.items.length} article{inv.items.length > 1 ? "s" : ""}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-black text-[#41b86d]">{formatDZD(inv.total)}</td>
-                <td className="px-6 py-4 font-medium text-muted-foreground">{inv.date}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${inv.type === "achat" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                <td className="px-8 py-8 font-black text-3xl text-primary tracking-tighter">{formatDZD(inv.total)}</td>
+                <td className="px-8 py-8 font-black text-lg text-muted-foreground">{inv.date}</td>
+                <td className="px-8 py-8">
+                  <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-sm ${inv.type === "achat" ? "bg-green-100 text-green-700 border-b-4 border-green-200" : "bg-rose-100 text-rose-700 border-b-4 border-rose-200"}`}>
                     {inv.type}
                   </span>
                 </td>
                 {user?.role === "admin" && (
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs font-bold text-foreground">Ajouté: {inv.addedBy || "-"}</span>
-                      {inv.editedBy && <span className="text-[10px] font-bold text-amber-600">Edité: {inv.editedBy}</span>}
+                  <td className="px-8 py-8">
+                    <div className="flex flex-col text-left space-y-1">
+                      <span className="text-sm font-black text-slate-500 uppercase tracking-widest">Added: {inv.addedBy || "-"}</span>
+                      {inv.editedBy && <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Edited: {inv.editedBy}</span>}
                     </div>
                   </td>
                 )}
-                <td className="px-6 py-4 text-right">
-                  <Button variant="ghost" size="sm" className="h-8 rounded-lg text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all">
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                <td className="px-8 py-8 text-right">
+                  <div className="h-14 w-14 rounded-2xl bg-secondary/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:scale-110 transition-all group-hover:shadow-lg group-hover:shadow-primary/20">
+                    <Eye className="h-7 w-7" />
+                  </div>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={user?.role === "admin" ? 8 : 7} className="px-6 py-20 text-center text-muted-foreground italic opacity-50">
-                  Aucune facture trouvée
+                <td colSpan={user?.role === "admin" ? 8 : 7} className="px-8 py-32 text-center text-muted-foreground italic opacity-50">
+                  <div className="flex flex-col items-center gap-4">
+                    <Search className="h-16 w-16" />
+                    <p className="text-2xl font-black uppercase tracking-[0.2em]">Aucune facture trouvée</p>
+                  </div>
                 </td>
               </tr>
             )}

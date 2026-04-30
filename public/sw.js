@@ -1,5 +1,5 @@
 const CACHE_NAME = "matjari-pwa-v1";
-const APP_SHELL = ["/", "/manifest.json", "/download (2).jpg"];
+const APP_SHELL = ["/", "/manifest.json", "/Store Icon - Noun Project (1).jpg"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

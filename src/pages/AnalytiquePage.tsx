@@ -183,21 +183,21 @@ export default function AnalytiquePage() {
   }, [monthlySales, monthlyPayments, clients]);
 
   return (
-    <div className="p-8 animate-fade-in bg-[#f4f8f8] min-h-screen font-sans text-gray-800">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+    <div className="p-8 lg:p-12 animate-fade-in bg-[#f4f8f8] min-h-screen font-sans text-gray-800">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-12">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-[#3f5362]">Analytique</h2>
+          <h2 className="text-5xl font-black tracking-tight text-[#3f5362]">Analytique</h2>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <Input
             type="month"
-            className="w-full max-w-[220px] bg-white border-gray-200 h-12 shadow-sm rounded-xl font-bold focus-visible:ring-0 text-[#3f5362]"
+            className="w-full max-w-[280px] bg-white border-gray-200 h-16 shadow-sm rounded-2xl font-black focus-visible:ring-0 text-[#3f5362] text-xl"
             value={month}
             onChange={e => { setMonth(e.target.value); setDay(""); }}
           />
           <div className="relative flex items-center">
             <select
-              className="appearance-none w-48 h-12 px-4 pr-9 bg-white border border-gray-200 rounded-xl font-bold text-[#3f5362] shadow-sm focus:outline-none focus:ring-0 text-sm cursor-pointer"
+              className="appearance-none w-64 h-16 px-6 pr-12 bg-white border border-gray-200 rounded-2xl font-black text-[#3f5362] shadow-sm focus:outline-none focus:ring-0 text-lg cursor-pointer"
               value={day}
               onChange={e => setDay(e.target.value)}
             >
@@ -208,60 +208,60 @@ export default function AnalytiquePage() {
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-3 text-gray-400 text-xs">▾</span>
+            <span className="pointer-events-none absolute right-6 text-gray-400 text-sm">▾</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ventes Totales</p>
-          <p className="text-3xl lg:text-4xl font-black text-[#3f5362] tracking-tighter">{formatDZD(totalRevenue)}</p>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in">
+          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Ventes Totales</p>
+          <p className="text-4xl lg:text-5xl font-black text-[#3f5362] tracking-tighter">{formatDZD(totalRevenue)}</p>
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '100ms' }}>
-          <p className="text-[10px] font-bold text-[#41b86d] uppercase tracking-widest mb-2">Vente Encaissée</p>
-          <p className="text-3xl lg:text-4xl font-black text-[#41b86d] tracking-tighter">{formatDZD(venteEncaisser)}</p>
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '100ms' }}>
+          <p className="text-xs font-black text-[#41b86d] uppercase tracking-widest mb-3">Vente Encaissée</p>
+          <p className="text-4xl lg:text-5xl font-black text-[#41b86d] tracking-tighter">{formatDZD(venteEncaisser)}</p>
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '200ms' }}>
-          <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-2">Vente Crédit</p>
-          <p className="text-3xl lg:text-4xl font-black text-red-500 tracking-tighter">{formatDZD(venteCredit)}</p>
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '200ms' }}>
+          <p className="text-xs font-black text-red-500 uppercase tracking-widest mb-3">Vente Crédit</p>
+          <p className="text-4xl lg:text-5xl font-black text-red-500 tracking-tighter">{formatDZD(venteCredit)}</p>
         </div>
-        <div className={`rounded-2xl p-6 shadow-sm border flex flex-col justify-center animate-scale-in bg-white`} style={{ animationDelay: '300ms', borderColor: '#e6f4ea' }}>
-          <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>Bénéfices</p>
-          <p className={`text-3xl lg:text-4xl font-black tracking-tighter ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>{formatDZD(profit)}</p>
+        <div className={`rounded-3xl p-8 shadow-sm border flex flex-col justify-center animate-scale-in bg-white`} style={{ animationDelay: '300ms', borderColor: '#e6f4ea' }}>
+          <p className={`text-xs font-black uppercase tracking-widest mb-3 ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>Bénéfices</p>
+          <p className={`text-4xl lg:text-5xl font-black tracking-tighter ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>{formatDZD(profit)}</p>
           {totalRevenue > 0 && (
-            <p className="text-[11px] mt-2 text-gray-500">Marge: {(profit / totalRevenue * 100).toFixed(1)}%</p>
+            <p className="text-sm mt-3 text-gray-500 font-bold">Marge: {(profit / totalRevenue * 100).toFixed(1)}%</p>
           )}
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border flex flex-col justify-center animate-scale-in" style={{ animationDelay: '400ms', borderColor: '#fca5a5' }}>
-          <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-2">Dépenses / Réduc</p>
-          <p className="text-3xl lg:text-4xl font-black text-orange-500 tracking-tighter">{formatDZD(totalExpenses + totalReduction)}</p>
-          <div className="flex gap-2 text-[10px] mt-2 font-bold text-gray-400">
+        <div className="bg-white rounded-3xl p-8 shadow-sm border flex flex-col justify-center animate-scale-in" style={{ animationDelay: '400ms', borderColor: '#fca5a5' }}>
+          <p className="text-xs font-black text-orange-500 uppercase tracking-widest mb-3">Dépenses / Réduc</p>
+          <p className="text-4xl lg:text-5xl font-black text-orange-500 tracking-tighter">{formatDZD(totalExpenses + totalReduction)}</p>
+          <div className="flex gap-4 text-xs mt-3 font-bold text-gray-400">
             <span>Dép: {formatDZD(totalExpenses)}</span>
             <span>Réd: {formatDZD(totalReduction)}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100">
-          <h4 className="font-bold text-sm text-[#3f5362]">
+      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden min-h-[600px]">
+        <div className="bg-gray-50/80 px-10 py-6 border-b border-gray-100">
+          <h4 className="font-black text-xl text-[#3f5362] uppercase tracking-wide">
             Historique des Ventes — {day ? new Date(`${month}-${day}`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : month}
           </h4>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-white">
+          <table className="w-full text-base">
+            <thead className="bg-white border-b border-gray-50">
               <tr>
-                <th className="text-left px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-gray-400">Date / Client</th>
-                <th className="text-center px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-gray-400">Statistiques</th>
-                <th className="text-left px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-gray-400">Produits</th>
-                <th className="text-right px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-gray-400">Recette</th>
+                <th className="text-left px-8 py-6 font-black text-xs uppercase tracking-[0.2em] text-gray-400">Date / Client</th>
+                <th className="text-center px-8 py-6 font-black text-xs uppercase tracking-[0.2em] text-gray-400">Statistiques</th>
+                <th className="text-left px-8 py-6 font-black text-xs uppercase tracking-[0.2em] text-gray-400">Produits</th>
+                <th className="text-right px-8 py-6 font-black text-xs uppercase tracking-[0.2em] text-gray-400">Recette</th>
               </tr>
             </thead>
             <tbody>
               {dailyGroups.length === 0 ? (
-                <tr><td colSpan={4} className="text-center py-16 text-gray-400 font-medium">Aucune activité ce mois</td></tr>
+                <tr><td colSpan={4} className="text-center py-32 text-gray-400 font-black text-2xl uppercase tracking-widest opacity-20">Aucune activité</td></tr>
               ) : (
                 dailyGroups.map(group => {
                   const isOpen = expandedDates.includes(group.date);
@@ -270,69 +270,71 @@ export default function AnalytiquePage() {
                   return (
                     <Fragment key={group.date}>
                       <tr
-                        className="border-t border-gray-50 hover:bg-gray-50/50 cursor-pointer"
+                        className="border-t border-gray-50 hover:bg-gray-50/50 cursor-pointer transition-colors"
                         onClick={() => toggleDate(group.date)}
                       >
-                        <td className="px-6 py-4">
-                          <p className="text-[#3f5362] font-black">{displayDate}</p>
-                          <p className="text-[10px] text-gray-400 uppercase">{group.sales.length} ventes</p>
+                        <td className="px-8 py-8">
+                          <p className="text-[#3f5362] font-black text-xl">{displayDate}</p>
+                          <p className="text-xs text-gray-400 uppercase font-bold mt-1 tracking-wider">{group.sales.length} ventes effectuées</p>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-[#41b86d]/10 text-[#41b86d] text-[10px] font-black">{group.directCount} DIRECT</span>
-                            {group.creditCount > 0 && <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-500 text-[10px] font-black">{group.creditCount} CRÉDIT</span>}
+                        <td className="px-8 py-8 text-center">
+                          <div className="flex justify-center gap-3">
+                            <span className="px-3 py-1 rounded-full bg-[#41b86d]/10 text-[#41b86d] text-xs font-black tracking-widest">{group.directCount} DIRECT</span>
+                            {group.creditCount > 0 && <span className="px-3 py-1 rounded-full bg-red-50 text-red-500 text-xs font-black tracking-widest">{group.creditCount} CRÉDIT</span>}
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-bold text-gray-600 line-clamp-1">
-                          {group.productList.join(", ")}
+                        <td className="px-8 py-8 font-bold text-gray-500 max-w-sm">
+                          <p className="truncate">{group.productList.join(", ")}</p>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-black text-[#3f5362]">{formatDZD(group.revenue)}</span>
-                          {group.paymentCredits > 0 && (
-                            <p className="text-[10px] text-[#41b86d] font-black">+ {formatDZD(group.paymentCredits)} payés</p>
-                          )}
-                          {group.totalReduction > 0 && (
-                            <p className="text-[10px] text-red-500 font-black">- {formatDZD(group.totalReduction)} réduc.</p>
-                          )}
-                          {group.expenseAmount > 0 && (
-                            <p className="text-[10px] text-orange-500 font-black">- {formatDZD(group.expenseAmount)} depense</p>
-                          )}
+                        <td className="px-8 py-8 text-right">
+                          <span className="font-black text-[#3f5362] text-2xl">{formatDZD(group.revenue)}</span>
+                          <div className="mt-2 space-y-1">
+                            {group.paymentCredits > 0 && (
+                              <p className="text-xs text-[#41b86d] font-black">+ {formatDZD(group.paymentCredits)} payés</p>
+                            )}
+                            {group.totalReduction > 0 && (
+                              <p className="text-xs text-red-500 font-black">- {formatDZD(group.totalReduction)} réduc.</p>
+                            )}
+                            {group.expenseAmount > 0 && (
+                              <p className="text-xs text-orange-500 font-black">- {formatDZD(group.expenseAmount)} depense</p>
+                            )}
+                          </div>
                         </td>
                       </tr>
                       {isOpen && group.sales.map(sale => (
                         <tr key={sale.id} className="bg-gray-50/30 border-t border-gray-100">
-                          <td className="px-10 py-3 text-xs text-gray-500">
+                          <td className="px-14 py-4 text-sm font-bold text-gray-500">
                             {new Date(sale.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                            {sale.username && <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Par {sale.username}</span>}
+                            {sale.username && <span className="ml-3 text-[11px] font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-lg">VENTE PAR {sale.username.toUpperCase()}</span>}
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <span className={`text-[9px] font-black px-2 py-0.5 rounded ${sale.type === 'credit' ? 'bg-red-50 text-red-500' : 'bg-[#41b86d]/10 text-[#41b86d]'}`}>
+                          <td className="px-8 py-4 text-center">
+                            <span className={`text-[10px] font-black px-3 py-1 rounded-full tracking-widest ${sale.type === 'credit' ? 'bg-red-50 text-red-500' : 'bg-[#41b86d]/10 text-[#41b86d]'}`}>
                               {sale.type.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-6 py-3 text-xs text-gray-600 italic">
+                          <td className="px-8 py-4 text-sm text-gray-600 italic font-medium">
                             {sale.items.map(i => i.product.name).join(", ")}
                           </td>
-                          <td className="px-6 py-3 text-right font-black text-gray-600 flex flex-col items-end">
-                            <span>{formatDZD(sale.total)}</span>
-                            {sale.reduction > 0 && <span className="text-[9px] text-red-500">- {formatDZD(sale.reduction)}</span>}
+                          <td className="px-8 py-4 text-right font-black text-gray-600 flex flex-col items-end">
+                            <span className="text-lg">{formatDZD(sale.total)}</span>
+                            {sale.reduction > 0 && <span className="text-[10px] text-red-500 mt-1">- {formatDZD(sale.reduction)} RÉDUCTION</span>}
                           </td>
                         </tr>
                       ))}
                       {isOpen && group.expenses.map(exp => (
                         <tr key={exp.id} className="bg-orange-50/20 border-t border-gray-100">
-                          <td className="px-10 py-3 text-xs text-gray-500">
+                          <td className="px-14 py-4 text-sm font-bold text-gray-500">
                             {new Date(exp.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <span className="text-[9px] font-black px-2 py-0.5 rounded bg-orange-100 text-orange-600">
+                          <td className="px-8 py-4 text-center">
+                            <span className="text-[10px] font-black px-3 py-1 rounded-full bg-orange-100 text-orange-600 tracking-widest">
                               DÉPENSE
                             </span>
                           </td>
-                          <td className="px-6 py-3 text-xs text-gray-600 italic">
+                          <td className="px-8 py-4 text-sm text-gray-600 italic font-bold">
                             {exp.note}
                           </td>
-                          <td className="px-6 py-3 text-right font-black text-orange-600">
+                          <td className="px-8 py-4 text-right font-black text-orange-600 text-lg">
                             - {formatDZD(exp.amount)}
                           </td>
                         </tr>

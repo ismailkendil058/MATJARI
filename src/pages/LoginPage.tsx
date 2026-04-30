@@ -67,52 +67,54 @@ const LoginPage = () => {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-secondary p-4 font-sans">
-            <Card className="w-full max-w-md shadow-xl border-border bg-white">
-                <CardHeader className="space-y-1 text-center border-b border-border pb-6">
+            <Card className="w-full max-w-lg shadow-2xl border-border bg-white overflow-hidden rounded-3xl">
+                <CardHeader className="space-y-4 text-center border-b border-border pb-10 pt-10 px-10">
                     <div className="flex justify-center mb-4">
-                        <div className="p-3 bg-primary rounded-xl shadow-lg shadow-primary/20">
-                            <Lock className="w-6 h-6 text-white" />
+                        <div className="p-5 bg-primary rounded-2xl shadow-xl shadow-primary/20">
+                            <Lock className="w-10 h-10 text-white" />
                         </div>
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-tighter">
-                        <span className="text-primary">Matjari</span> <span className="text-gray-400 text-xl font-bold uppercase tracking-[0.2em]">متجري</span>
+                    <CardTitle className="text-5xl font-black tracking-tighter">
+                        <span className="text-primary">Matjari</span> <span className="text-gray-400 text-3xl font-bold uppercase tracking-[0.2em]">متجري</span>
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground font-medium">
+                    <CardDescription className="text-lg text-muted-foreground font-medium pt-2">
                         Entrez vos identifiants pour accéder au système
                     </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleLogin} className="pt-4">
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="username" className="font-bold">Nom d'utilisateur</Label>
+                <form onSubmit={handleLogin} className="pt-6">
+                    <CardContent className="space-y-8 px-10">
+                        <div className="space-y-3">
+                            <Label htmlFor="username" className="text-xl font-bold">Nom d'utilisateur</Label>
                             <Select value={username} onValueChange={setUsername}>
-                                <SelectTrigger className="h-12 border-border bg-secondary/50 focus:ring-primary shadow-none">
-                                    <div className="flex items-center gap-3 text-muted-foreground w-full">
-                                        <UserIcon className="h-5 w-5 flex-shrink-0" />
+                                <SelectTrigger className="h-16 text-lg border-border bg-secondary/50 focus:ring-primary shadow-none rounded-xl">
+                                    <div className="flex items-center gap-4 text-muted-foreground w-full">
+                                        <UserIcon className="h-8 w-8 flex-shrink-0" />
                                         <SelectValue placeholder="Sélectionner un utilisateur" />
                                     </div>
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="rounded-xl">
                                     {adminUsers.map(admin => (
-                                        <SelectItem key={admin.id} value={admin.username} className="font-bold">
+                                        <SelectItem key={admin.id} value={admin.username} className="font-bold text-lg py-4">
                                             {admin.username} (Admin)
                                         </SelectItem>
                                     ))}
                                     {workerUsers.map(worker => (
-                                        <SelectItem key={worker.id} value={worker.username}>{worker.username}</SelectItem>
+                                        <SelectItem key={worker.id} value={worker.username} className="text-lg py-4">
+                                            {worker.username}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="password" className="font-bold">Mot de passe</Label>
+                        <div className="space-y-3">
+                            <Label htmlFor="password" className="text-xl font-bold">Mot de passe</Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                                <Lock className="absolute left-4 top-5 h-6 w-6 text-muted-foreground" />
                                 <Input
                                     id="password"
                                     type="password"
                                     placeholder="••••••••"
-                                    className="pl-10 h-12 border-border bg-secondary/50 focus-visible:ring-primary shadow-none"
+                                    className="pl-12 h-16 text-xl border-border bg-secondary/50 focus-visible:ring-primary shadow-none rounded-xl"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -120,15 +122,15 @@ const LoginPage = () => {
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="pb-6">
+                    <CardFooter className="pb-10 pt-6 px-10">
                         <Button
                             type="submit"
-                            className="w-full h-12 text-lg font-black tracking-wide bg-primary hover:bg-primary/90 text-white transition-all duration-200 shadow-md hover:-translate-y-0.5 rounded-lg"
+                            className="w-full h-16 text-2xl font-black tracking-wide bg-primary hover:bg-primary/90 text-white transition-all duration-200 shadow-lg hover:-translate-y-1 rounded-2xl"
                             disabled={isLoggingIn}
                         >
                             {isLoggingIn ? (
                                 <>
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    <Loader2 className="mr-3 h-7 w-7 animate-spin" />
                                     Connexion...
                                 </>
                             ) : (
