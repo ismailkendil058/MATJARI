@@ -1,0 +1,15 @@
+.mobile-safe-bottom {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+.mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-scroll-x {
+  scrollbar-width: none;
+}
+
+.mobile-scroll-x::-webkit-scrollbar {
+  display: none;
+}
