@@ -30,7 +30,7 @@ export function AppSidebar() {
   const currentNavItems = user?.role === "admin" ? adminNavItems : navItems;
 
   return (
-    <aside className="w-80 min-h-screen bg-white flex flex-col border-r border-gray-200 shadow-sm z-20 font-sans">
+    <aside className="w-80 h-screen sticky top-0 bg-white flex flex-col border-r border-gray-200 shadow-sm z-20 font-sans overflow-y-auto no-scrollbar">
       {/* Logout button top left as requested */}
       <div className="p-5 border-b border-gray-100 bg-gray-50/30">
         <Button
