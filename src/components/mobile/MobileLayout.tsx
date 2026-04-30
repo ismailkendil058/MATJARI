@@ -33,7 +33,7 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
                 key={item.url}
                 to={item.url}
                 end
-                className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition-all ${isActive ? "bg-[#be123c] text-white shadow-[0_10px_24px_rgba(190,18,60,0.3)]" : "text-white/70"
+                className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition-all ${isActive ? "bg-primary text-white shadow-md shadow-primary/30" : "text-white/70"
                   }`}
               >
                 <item.icon className="h-4 w-4" strokeWidth={2.2} />

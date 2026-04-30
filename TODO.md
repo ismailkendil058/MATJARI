@@ -1,4 +1,4 @@
-# Task: Update store-icon to favicon/PWA icon and rename project to "cosmetique logistics"
+# Task: Update store-icon to favicon/PWA icon and rename project to "Matjari متجري"
 
 ## TODO Steps:
 1. [x] Read public/sw.js to confirm contents for editing

@@ -1,4 +1,4 @@
-// Cosmetique Logistics - Shared Utilities and Constants
+// Matjari متجري - Shared Utilities and Constants
 import { Product, CategoryType } from "./types";
 
 export function generateId(): string {
@@ -10,11 +10,12 @@ export function formatDZD(amount: number): string {
 }
 
 export const CATEGORIES: { key: CategoryType; label: string; labelAr: string }[] = [
-  { key: "cigarettes", label: "Cigarettes", labelAr: "سجائر" },
-  { key: "chemma", label: "Chemma", labelAr: "شمة" },
-  { key: "chocolates", label: "Chocolats", labelAr: "شوكولاتة" },
-  { key: "drinks", label: "Boissons", labelAr: "مشروبات" },
-  { key: "snacks", label: "Candies", labelAr: "حلويات" },
-  { key: "cosmetics", label: "Cosmétique", labelAr: "تجميل" },
-  { key: "divers", label: "Divers", labelAr: "متنوع" },
+  { key: "hauts", label: "Hauts", labelAr: "قمصان" },
+  { key: "pantalons", label: "Pantalons", labelAr: "بناطيل" },
+  { key: "chaussures", label: "Chaussures", labelAr: "أحذية" },
+  { key: "accessoires", label: "Accessoires", labelAr: "إكسسوارات" },
+  { key: "parfums", label: "Parfums", labelAr: "عطور" },
+  { key: "sport", label: "Sport", labelAr: "ملابس رياضية" },
+  { key: "sousvetements", label: "Sous-vêtements", labelAr: "ملابس داخلية" },
+  { key: "vestes", label: "Vestes", labelAr: "جاكيتات" },
 ];

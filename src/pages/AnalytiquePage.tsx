@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
-import { getSales, getPayments, getClients } from "@/lib/db";
-import { Sale, Payment, Client } from "@/lib/types";
+import { getSales, getPayments, getClients, getExpenses } from "@/lib/db";
+import { Sale, Payment, Client, Expense } from "@/lib/types";
 import { formatDZD } from "@/lib/store";
 import { Input } from "@/components/ui/input";
 
 export default function AnalytiquePage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [day, setDay] = useState<string>("");
@@ -20,12 +21,14 @@ export default function AnalytiquePage() {
     const loadData = async () => {
       try {
         const prefix = day ? `${month}-${day.padStart(2, "0")}` : month;
-        const [salesData, paymentsData] = await Promise.all([
+        const [salesData, paymentsData, expensesData] = await Promise.all([
           getSales(prefix),
-          getPayments(prefix)
+          getPayments(prefix),
+          getExpenses(prefix)
         ]);
         setSales(salesData);
         setPayments(paymentsData);
+        setExpenses(expensesData);
       } catch (error) {
         console.error("Error loading analytics data:", error);
       }
@@ -52,13 +55,15 @@ export default function AnalytiquePage() {
 
   const totalRevenue = monthlySales.reduce((s, sale) => s + sale.total, 0);
   const totalPaymentCredits = monthlyPayments.reduce((s, p) => s + p.amount, 0);
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const directCash = monthlySales.reduce((s, sale) => s + (sale.paidAmount || 0), 0);
-  const venteEncaisser = directCash + totalPaymentCredits;
-  const venteCredit = totalRevenue - venteEncaisser;
+  const venteEncaisser = directCash + totalPaymentCredits - totalExpenses;
+  const venteCredit = totalRevenue - (directCash + totalPaymentCredits);
   const totalCost = monthlySales.reduce((s, sale) => {
     return s + sale.items.reduce((is, item) => is + getItemPurchaseCost(item), 0);
   }, 0);
-  const profit = totalRevenue - totalCost;
+  const totalReduction = monthlySales.reduce((s, sale) => s + (sale.reduction || 0), 0);
+  const profit = totalRevenue - totalCost - totalExpenses;
   const totalCaisse = venteEncaisser;
 
   const [expandedDates, setExpandedDates] = useState<string[]>([]);
@@ -79,9 +84,12 @@ export default function AnalytiquePage() {
         creditCount: number;
         directCount: number;
         paymentCredits: number;
+        expenseAmount: number;
+        totalReduction: number;
         productNames: Set<string>;
         sales: typeof monthlySales;
         payments: (Payment & { clientName: string })[];
+        expenses: Expense[];
       }
     >();
 
@@ -94,13 +102,17 @@ export default function AnalytiquePage() {
         creditCount: 0,
         directCount: 0,
         paymentCredits: 0,
+        expenseAmount: 0,
+        totalReduction: 0,
         productNames: new Set<string>(),
         sales: [],
-        payments: []
+        payments: [],
+        expenses: []
       };
 
       existing.revenue += sale.total;
       existing.cost += sale.items.reduce((s, i) => s + getItemPurchaseCost(i), 0);
+      existing.totalReduction = (existing.totalReduction || 0) + (sale.reduction || 0);
       if (sale.type === "credit") {
         existing.creditCount += 1;
       } else {
@@ -121,9 +133,12 @@ export default function AnalytiquePage() {
         creditCount: 0,
         directCount: 0,
         paymentCredits: 0,
+        expenseAmount: 0,
+        totalReduction: 0,
         productNames: new Set<string>(),
         sales: [],
-        payments: []
+        payments: [],
+        expenses: []
       };
       existing.paymentCredits += p.amount;
       existing.payments.push({
@@ -133,10 +148,31 @@ export default function AnalytiquePage() {
       map.set(dayKey, existing);
     });
 
+    expenses.forEach(e => {
+      const dayKey = e.date.slice(0, 10);
+      const existing = map.get(dayKey) || {
+        date: dayKey,
+        revenue: 0,
+        cost: 0,
+        creditCount: 0,
+        directCount: 0,
+        paymentCredits: 0,
+        expenseAmount: 0,
+        totalReduction: 0,
+        productNames: new Set<string>(),
+        sales: [],
+        payments: [],
+        expenses: []
+      };
+      existing.expenseAmount += e.amount;
+      existing.expenses.push(e);
+      map.set(dayKey, existing);
+    });
+
     const groups = Array.from(map.values()).map(group => ({
       ...group,
       productList: Array.from(group.productNames),
-      profit: group.revenue - group.cost,
+      profit: group.revenue - group.cost - group.expenseAmount,
     }));
 
     groups.forEach(group => {
@@ -177,25 +213,33 @@ export default function AnalytiquePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ventes Totales</p>
-          <p className="text-4xl font-black text-[#3f5362] tracking-tighter">{formatDZD(totalRevenue)}</p>
+          <p className="text-3xl lg:text-4xl font-black text-[#3f5362] tracking-tighter">{formatDZD(totalRevenue)}</p>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '100ms' }}>
           <p className="text-[10px] font-bold text-[#41b86d] uppercase tracking-widest mb-2">Vente Encaissée</p>
-          <p className="text-4xl font-black text-[#41b86d] tracking-tighter">{formatDZD(venteEncaisser)}</p>
+          <p className="text-3xl lg:text-4xl font-black text-[#41b86d] tracking-tighter">{formatDZD(venteEncaisser)}</p>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center animate-scale-in" style={{ animationDelay: '200ms' }}>
           <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-2">Vente Crédit</p>
-          <p className="text-4xl font-black text-red-500 tracking-tighter">{formatDZD(venteCredit)}</p>
+          <p className="text-3xl lg:text-4xl font-black text-red-500 tracking-tighter">{formatDZD(venteCredit)}</p>
         </div>
         <div className={`rounded-2xl p-6 shadow-sm border flex flex-col justify-center animate-scale-in bg-white`} style={{ animationDelay: '300ms', borderColor: '#e6f4ea' }}>
           <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>Bénéfices</p>
-          <p className={`text-4xl font-black tracking-tighter ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>{formatDZD(profit)}</p>
+          <p className={`text-3xl lg:text-4xl font-black tracking-tighter ${profit >= 0 ? 'text-[#16a34a]' : 'text-red-500'}`}>{formatDZD(profit)}</p>
           {totalRevenue > 0 && (
             <p className="text-[11px] mt-2 text-gray-500">Marge: {(profit / totalRevenue * 100).toFixed(1)}%</p>
           )}
+        </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border flex flex-col justify-center animate-scale-in" style={{ animationDelay: '400ms', borderColor: '#fca5a5' }}>
+          <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-2">Dépenses / Réduc</p>
+          <p className="text-3xl lg:text-4xl font-black text-orange-500 tracking-tighter">{formatDZD(totalExpenses + totalReduction)}</p>
+          <div className="flex gap-2 text-[10px] mt-2 font-bold text-gray-400">
+            <span>Dép: {formatDZD(totalExpenses)}</span>
+            <span>Réd: {formatDZD(totalReduction)}</span>
+          </div>
         </div>
       </div>
 
@@ -247,6 +291,12 @@ export default function AnalytiquePage() {
                           {group.paymentCredits > 0 && (
                             <p className="text-[10px] text-[#41b86d] font-black">+ {formatDZD(group.paymentCredits)} payés</p>
                           )}
+                          {group.totalReduction > 0 && (
+                            <p className="text-[10px] text-red-500 font-black">- {formatDZD(group.totalReduction)} réduc.</p>
+                          )}
+                          {group.expenseAmount > 0 && (
+                            <p className="text-[10px] text-orange-500 font-black">- {formatDZD(group.expenseAmount)} depense</p>
+                          )}
                         </td>
                       </tr>
                       {isOpen && group.sales.map(sale => (
@@ -263,8 +313,27 @@ export default function AnalytiquePage() {
                           <td className="px-6 py-3 text-xs text-gray-600 italic">
                             {sale.items.map(i => i.product.name).join(", ")}
                           </td>
-                          <td className="px-6 py-3 text-right font-black text-gray-600">
-                            {formatDZD(sale.total)}
+                          <td className="px-6 py-3 text-right font-black text-gray-600 flex flex-col items-end">
+                            <span>{formatDZD(sale.total)}</span>
+                            {sale.reduction > 0 && <span className="text-[9px] text-red-500">- {formatDZD(sale.reduction)}</span>}
+                          </td>
+                        </tr>
+                      ))}
+                      {isOpen && group.expenses.map(exp => (
+                        <tr key={exp.id} className="bg-orange-50/20 border-t border-gray-100">
+                          <td className="px-10 py-3 text-xs text-gray-500">
+                            {new Date(exp.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <span className="text-[9px] font-black px-2 py-0.5 rounded bg-orange-100 text-orange-600">
+                              DÉPENSE
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 text-xs text-gray-600 italic">
+                            {exp.note}
+                          </td>
+                          <td className="px-6 py-3 text-right font-black text-orange-600">
+                            - {formatDZD(exp.amount)}
                           </td>
                         </tr>
                       ))}

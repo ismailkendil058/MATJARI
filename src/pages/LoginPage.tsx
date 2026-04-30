@@ -44,7 +44,7 @@ const LoginPage = () => {
             if (success) {
                 toast({
                     title: "Connexion réussie",
-                    description: "Bienvenue sur TABACO",
+                    description: "Bienvenue sur Matjari",
                 });
                 navigate("/");
             } else {
@@ -75,7 +75,7 @@ const LoginPage = () => {
                         </div>
                     </div>
                     <CardTitle className="text-3xl font-black tracking-tighter">
-                        <span className="text-primary">TABA</span><span className="text-gray-400">CO</span>
+                        <span className="text-primary">Matjari</span> <span className="text-gray-400 text-xl font-bold uppercase tracking-[0.2em]">متجري</span>
                     </CardTitle>
                     <CardDescription className="text-muted-foreground font-medium">
                         Entrez vos identifiants pour accéder au système

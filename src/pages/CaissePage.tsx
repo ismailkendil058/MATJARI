@@ -1,44 +1,57 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Search, Plus, Minus, Trash2, Package, Cigarette, Cookie, CupSoda, Grid, Candy, Sparkles } from "lucide-react";
+import { Search, Plus, Minus, Trash2, Package, Shirt, Sparkles, Watch, Dumbbell, Footprints, Layers, Printer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   getClients, saveClients, updateClientCredit, addSale,
-  getProducts, updateProductStock, getCustomCards, saveCustomCards
+  getProducts, updateProductStock, getCustomCards, saveCustomCards,
+  addExpense, updateProduct
 } from "@/lib/db";
-import { Product, CartItem, CategoryType, CustomSaleCard, Client, Sale } from "@/lib/types";
+
+import { Product, CartItem, CategoryType, CustomSaleCard, Client, Sale, Expense } from "@/lib/types";
 import { CATEGORIES, formatDZD, generateId } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthContext";
 
-const categoryIcons: Record<CategoryType, React.ElementType> = {
-  cigarettes: Cigarette,
-  chemma: Package,
-  chocolates: Cookie,
-  drinks: CupSoda,
-  snacks: Candy,
-  cosmetics: Sparkles,
-  divers: Grid,
-};
-
 const categoryColors: Record<CategoryType, string> = {
-  cigarettes: "bg-[#be123c] hover:bg-[#9f1239] text-white", // Red
-  chemma: "bg-[#713f12] hover:bg-[#451a03] text-white", // Brown
-  chocolates: "bg-[#7e22ce] hover:bg-[#6b21a8] text-white", // Purple
-  drinks: "bg-[#0369a1] hover:bg-[#075985] text-white", // Blue
-  snacks: "bg-[#f59e0b] hover:bg-[#d97706] text-white", // Amber/Gold
-  cosmetics: "bg-[#db2777] hover:bg-[#be185d] text-white", // Pink
-  divers: "bg-[#4b5563] hover:bg-[#374151] text-white", // Grey
+  hauts: "bg-gray-200 hover:bg-gray-300 text-black",
+  pantalons: "bg-gray-200 hover:bg-gray-300 text-black",
+  chaussures: "bg-gray-200 hover:bg-gray-300 text-black",
+  accessoires: "bg-gray-200 hover:bg-gray-300 text-black",
+  parfums: "bg-gray-200 hover:bg-gray-300 text-black",
+  sport: "bg-gray-200 hover:bg-gray-300 text-black",
+  sousvetements: "bg-gray-200 hover:bg-gray-300 text-black",
+  vestes: "bg-gray-200 hover:bg-gray-300 text-black",
 };
 
-const customizableCategories = new Set<CategoryType>(["cigarettes", "drinks"]);
+const SIZE_CATEGORIES: CategoryType[] = ["hauts", "sport", "sousvetements", "vestes", "chaussures"];
+
+
+const categoryIcons: Record<CategoryType, any> = {
+  hauts: Shirt,
+  pantalons: Layers,
+  chaussures: Footprints,
+  accessoires: Watch,
+  parfums: Sparkles,
+  sport: Dumbbell,
+  sousvetements: Layers,
+  vestes: Shirt,
+};
+
+const SHIRT_SIZES = ["S", "M", "L", "XL"];
+const SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
+
+
+
+const customizableCategories = new Set<CategoryType>(["parfums"]);
+
 
 export default function CaissePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<CategoryType | null>("cigarettes");
+  const [activeCategory, setActiveCategory] = useState<CategoryType | null>("hauts");
   const [barcodeInput, setBarcodeInput] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -56,11 +69,21 @@ export default function CaissePage() {
 
   const [customCards, setCustomCards] = useState<CustomSaleCard[]>([]);
   const [showCustomModal, setShowCustomModal] = useState(false);
+
+  const [showExpense, setShowExpense] = useState(false);
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [expenseNote, setExpenseNote] = useState("");
+
   const [customModalProduct, setCustomModalProduct] = useState<Product | null>(null);
   const [customModalKg, setCustomModalKg] = useState("");
   const [customModalUnitPrice, setCustomModalUnitPrice] = useState("");
   const [activeCustomCard, setActiveCustomCard] = useState<CustomSaleCard | null>(null);
   const [customCardKg, setCustomCardKg] = useState("");
+
+  const [showSizeModal, setShowSizeModal] = useState(false);
+  const [sizeModalProduct, setSizeModalProduct] = useState<Product | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+
 
   const getCustomCardPendingKg = useCallback((cardId: string) => {
     return cart.reduce((sum, item) => {
@@ -253,28 +276,68 @@ export default function CaissePage() {
     });
   }, [products, search, activeCategory]);
 
-  const normalProductCartQty = (productId: string) => {
-    return cart.reduce((sum, item) => {
-      if (item.product.id !== productId || item.customUnitPrice) return sum;
-      return sum + item.quantity;
+  const addToCart = useCallback((product: Product, size?: string) => {
+    // Total qty of this product in cart regardless of size (to check stock)
+    const totalQtyInCart = cart.reduce((sum, item) => {
+      const baseId = item.customBaseProductId ?? item.product.id;
+      return (baseId === product.id && !item.customCardId) ? sum + item.quantity : sum;
     }, 0);
-  };
 
-  const addToCart = useCallback((product: Product) => {
-    const qtyInCart = normalProductCartQty(product.id);
-    if (product.stock <= qtyInCart) return false;
+    if (product.stock <= totalQtyInCart) return false;
+
+    // Size-specific stock check
+    if (size) {
+      const available = product.sizeStock?.[size] || 0;
+      const inCart = cart.find(c => c.product.id === product.id && !c.customUnitPrice)?.sizeQtys?.[size] || 0;
+      if (available <= inCart) return false;
+    }
+
+
     setCart(prev => {
       const existing = prev.find(c => c.product.id === product.id && !c.customUnitPrice);
       if (existing) {
-        return prev.map(c => c.product.id === product.id && !c.customUnitPrice
-          ? { ...c, quantity: c.quantity + 1, subtotal: (c.quantity + 1) * product.priceSale }
+        const nextSizeQtys = { ...(existing.sizeQtys || {}) };
+        if (size) nextSizeQtys[size] = (nextSizeQtys[size] || 0) + 1;
+
+        return prev.map(c => (c.product.id === product.id && !c.customUnitPrice)
+          ? {
+            ...c,
+            quantity: c.quantity + 1,
+            subtotal: (c.quantity + 1) * product.priceSale,
+            size: size ? (c.size ? (c.size.split(', ').includes(size) ? c.size : `${c.size}, ${size}`) : size) : c.size,
+            sizeQtys: nextSizeQtys
+          }
           : c
         );
       }
-      return [...prev, { product, quantity: 1, subtotal: product.priceSale }];
+      return [...prev, { product, quantity: 1, size, subtotal: product.priceSale, sizeQtys: size ? { [size]: 1 } : undefined }];
     });
     return true;
   }, [cart]);
+
+  const handleProductClick = (product: Product) => {
+    if (SIZE_CATEGORIES.includes(product.category)) {
+      setSizeModalProduct(product);
+      setShowSizeModal(true);
+    } else {
+      addToCart(product);
+    }
+  };
+
+
+  const selectSize = (size: string) => {
+    if (sizeModalProduct) {
+      const added = addToCart(sizeModalProduct, size);
+      if (!added) {
+        toast({ title: "Stock insuffisant", description: `${sizeModalProduct.name} n'est pas disponible en quantité suffisante.` });
+      } else {
+        toast({ title: "Ajouté au panier", description: `${sizeModalProduct.name} (${size}) ajouté.` });
+      }
+      setShowSizeModal(false);
+      setSizeModalProduct(null);
+    }
+  };
+
 
   const handleAddByBarcode = (code?: string) => {
     const val = (code ?? barcodeInput).trim();
@@ -285,7 +348,13 @@ export default function CaissePage() {
       setBarcodeInput("");
       return;
     }
+    if (SIZE_CATEGORIES.includes(found.category)) {
+      handleProductClick(found);
+      setBarcodeInput("");
+      return;
+    }
     const added = addToCart(found);
+
     setBarcodeInput("");
     if (!added) {
       toast({ title: "Stock insuffisant", description: `${found.name} n'est pas disponible en quantité suffisante.` });
@@ -293,12 +362,15 @@ export default function CaissePage() {
     }
 
     toast({ title: "Ajouté au panier", description: `${found.name} ajouté.` });
+
   };
 
   const updateQty = (id: string, delta: number) => {
     setCart(prev => {
       const item = prev.find(c => c.product.id === id);
+
       if (!item) return prev;
+
 
       if (delta > 0) {
         // Handle custom card specific logic
@@ -343,6 +415,8 @@ export default function CaissePage() {
 
   const removeItem = (id: string) => setCart(prev => prev.filter(c => c.product.id !== id));
 
+
+
   const subtotal = cart.reduce((s, c) => s + c.subtotal, 0);
   const total = subtotal - reduction;
 
@@ -371,10 +445,20 @@ export default function CaissePage() {
     try {
       const saleId = generateId();
       for (const item of cart) {
-        if (item.customCardId) continue; // Already deducted from stock when card was created
+        if (item.customCardId) continue;
         const productId = item.customBaseProductId ?? item.product.id;
-        await updateProductStock(productId, -item.quantity);
+        const prod = products.find(p => p.id === productId);
+        if (prod) {
+          const nextSizeStock = { ...(prod.sizeStock || {}) };
+          if (item.sizeQtys) {
+            Object.entries(item.sizeQtys).forEach(([sz, q]) => {
+              nextSizeStock[sz] = Math.max(0, (nextSizeStock[sz] || 0) - q);
+            });
+          }
+          await updateProduct({ ...prod, stock: prod.stock - item.quantity, sizeStock: nextSizeStock });
+        }
       }
+
       await applyCustomCardUsage();
 
       const isCredit = type === 'credit';
@@ -418,6 +502,126 @@ export default function CaissePage() {
     } catch (error) {
       console.error("Checkout failed:", error);
     }
+  };
+
+  const handleExpenseSubmit = async () => {
+    const amt = Number(expenseAmount);
+    if (!amt || !expenseNote) return;
+    try {
+      await addExpense({
+        id: generateId(),
+        amount: amt,
+        date: new Date().toISOString(),
+        note: expenseNote
+      });
+      setShowExpense(false);
+      setExpenseAmount("");
+      setExpenseNote("");
+      toast({ title: "Dépense ajoutée", description: `Dépense de ${formatDZD(amt)} enregistrée.` });
+    } catch (error) {
+      console.error("Failed to add expense:", error);
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    setShowReceiptModal(true);
+  };
+
+  const executePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsHtml = cart.map(item => `
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 4px 0;">${item.product.name} ${item.size ? `(${item.size})` : ''}</td>
+        <td style="padding: 4px 0; text-align: center;">${item.quantity}</td>
+        <td style="padding: 4px 0; text-align: right;">${formatDZD(item.subtotal)}</td>
+      </tr>
+    `).join('');
+
+    const receiptContent = `
+      <html>
+      <head>
+        <title>Ticket d'achat - Matjari</title>
+        <style>
+          @page { size: 80mm auto; margin: 0; }
+          body { font-family: 'Courier New', Courier, monospace; width: 75mm; margin: 0 auto; padding: 10px; color: black; background: white; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .bold { font-weight: bold; }
+          .hr { border-bottom: 1px dashed black; margin: 10px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          th { font-size: 11px; text-transform: uppercase; border-bottom: 1px solid black; }
+          td { font-size: 12px; }
+          .total-box { margin-top: 15px; border-top: 2px solid black; padding-top: 5px; }
+          .footer { font-size: 10px; margin-top: 20px; text-align: center; font-style: italic; }
+        </style>
+      </head>
+      <body>
+        <div class="text-center">
+          <div class="bold" style="font-size: 22px;">MATJARI متجري</div>
+          <div style="font-size: 12px; margin-top: 4px;">TICKET D'ACHAT</div>
+        </div>
+        <div class="hr"></div>
+        <div style="font-size: 10px;">
+          Date: ${new Date().toLocaleString('fr-FR')} <br/>
+          Ticket ID: ${generateId().toUpperCase()} <br/>
+          Caissier: ${user?.username || 'Admin'}
+        </div>
+        ${clientName ? `<div style="font-size: 10px; margin-top: 4px;">Client: <b>${clientName}</b></div>` : ''}
+        <div class="hr"></div>
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align: left;">Art.</th>
+              <th style="text-align: center;">Qté</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        <div class="hr"></div>
+        <div class="text-right" style="font-size: 11px;">
+          Sous-total: ${formatDZD(subtotal)} <br/>
+          ${reduction > 0 ? `Réduction: -${formatDZD(reduction)} <br/>` : ''}
+        </div>
+        <div class="total-box">
+          <div class="flex justify-between" style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 2000;">
+            <span class="bold">TOTAL:</span>
+            <span class="bold">${formatDZD(total)}</span>
+          </div>
+          ${showCreditDetails && Number(paidNow) > 0 ? `
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
+              <span>Payé:</span>
+              <span>${formatDZD(Number(paidNow))}</span>
+            </div>
+          ` : ''}
+          ${showCreditDetails ? `
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 2px; border-top: 1px solid #ddd;">
+              <span class="bold">RESTE (CRÉDIT):</span>
+              <span class="bold">${formatDZD(Math.max(0, total - (Number(paidNow) || 0)))}</span>
+            </div>
+          ` : ''}
+        </div>
+        <div class="footer">
+          Merci pour votre confiance ! <br/>
+          À bientôt chez MATJARI متجري
+        </div>
+        <script>
+          setTimeout(() => {
+            window.print();
+            window.close();
+          }, 500);
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(receiptContent);
+    printWindow.document.close();
+    setShowReceiptModal(false);
   };
 
   const handleClientInput = (val: string) => {
@@ -479,20 +683,17 @@ export default function CaissePage() {
         </div>
 
         {/* Category filters - mobile */}
-        <div className="mobile-scroll-x flex gap-2 overflow-x-auto pb-3 lg:hidden">
-          <div className="flex min-w-max gap-2">
+        <div className="mobile-scroll-x flex gap-2 overflow-x-auto pb-3 lg:hidden w-full">
+          <div className="flex w-full gap-2">
             {CATEGORIES.map(cat => {
-              const CategoryIcon = categoryIcons[cat.key];
-
               return (
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
-                  className={`min-w-[108px] md:min-w-[116px] flex-shrink-0 py-4 md:min-h-[84px] rounded-lg transition-all flex flex-col items-center justify-center gap-1.5 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-black/10 scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  className={`flex-1 min-w-[72px] aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-1 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
                 >
-                  <CategoryIcon className="hidden md:block h-7 w-[35px]" strokeWidth={2.2} />
-                  <div className="text-[9px] md:text-[9px] opacity-80 uppercase tracking-wider">{cat.labelAr}</div>
-                  <span className="font-semibold text-xs md:text-sm tracking-wide text-center leading-tight max-w-[72px] whitespace-normal">{cat.label}</span>
+                  <div className="font-black text-sm md:text-lg tracking-wider text-center leading-tight">{cat.labelAr}</div>
+                  <span className="font-bold text-[9px] md:text-[10px] opacity-75 tracking-widest text-center uppercase mx-auto">{cat.label}</span>
                 </button>
               );
             })}
@@ -503,14 +704,14 @@ export default function CaissePage() {
         <div className="flex-1 overflow-auto rounded-lg mb-4">
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-2.5 p-1">
             {filteredProducts.map(product => {
-              const Icon = categoryIcons[product.category] || Package;
               const showCustom = customizableCategories.has(product.category);
               return (
                 <div
                   key={product.id}
-                  onClick={() => addToCart(product)}
+                  onClick={() => handleProductClick(product)}
                   className="bg-white border border-border rounded-lg p-2.5 md:p-2.5 text-left hover:border-accent hover:shadow-md transition-all duration-200 group relative flex flex-col min-h-[172px] md:min-h-[160px] items-center justify-between cursor-pointer"
                 >
+
                   <span className="absolute top-2 right-2 text-[10px] font-semibold bg-secondary text-muted-foreground px-1.5 py-0.5 rounded">
                     {product.stock}
                   </span>
@@ -525,7 +726,10 @@ export default function CaissePage() {
                     </button>
                   )}
                   <div className="flex-1 flex items-center justify-center pt-3 pb-1 w-full pointer-events-none">
-                    <Icon className="h-11 w-11 md:h-[54px] md:w-[54px] text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all drop-shadow-sm" strokeWidth={1.5} />
+                    {(() => {
+                      const ProductIcon = categoryIcons[product.category] || Package;
+                      return <ProductIcon className="h-11 w-11 md:h-[54px] md:w-[54px] text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all drop-shadow-sm" strokeWidth={1.5} />;
+                    })()}
                   </div>
                   <div className="w-full border-t border-border pt-2 flex flex-col h-12 justify-end">
                     <p className="text-[11px] md:text-[11px] font-medium text-foreground leading-tight mb-1 line-clamp-2 text-center" title={product.name}>{product.name}</p>
@@ -572,20 +776,17 @@ export default function CaissePage() {
         </div>
 
         {/* Category filters */}
-        <div className="mobile-scroll-x hidden gap-2 overflow-x-auto pt-2 border-t border-border pb-1 lg:flex">
-          <div className="flex min-w-max gap-2 md:mx-auto">
+        <div className="hidden gap-2 pt-2 border-t border-border pb-1 lg:flex w-full">
+          <div className="flex w-full gap-2">
             {CATEGORIES.map(cat => {
-              const CategoryIcon = categoryIcons[cat.key];
-
               return (
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
-                  className={`min-w-[108px] md:min-w-[116px] flex-shrink-0 py-4 md:min-h-[84px] rounded-lg transition-all flex flex-col items-center justify-center gap-1.5 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-black/10 scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  className={`flex-1 aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-2 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
                 >
-                  <CategoryIcon className="hidden md:block h-7 w-[35px]" strokeWidth={2.2} />
-                  <div className="text-[9px] md:text-[9px] opacity-80 uppercase tracking-wider">{cat.labelAr}</div>
-                  <span className="font-semibold text-xs md:text-sm tracking-wide text-center leading-tight max-w-[72px] whitespace-normal">{cat.label}</span>
+                  <div className="font-black text-xl md:text-2xl tracking-wider text-center leading-tight">{cat.labelAr}</div>
+                  <span className="font-bold text-xs md:text-sm opacity-80 tracking-widest text-center uppercase mt-1 mx-auto">{cat.label}</span>
                 </button>
               );
             })}
@@ -621,10 +822,13 @@ export default function CaissePage() {
             </div>
           ) : (
             <div className="divide-y divide-border p-2">
-              {cart.map(item => (
-                <div key={item.product.id} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm border border-border mb-2 group transition-all hover:border-accent">
+              {cart.map((item, idx) => (
+                <div key={`${item.product.id}-${idx}`} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm border border-border mb-2 group transition-all hover:border-accent">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {item.product.name}
+                      {item.size && <span className="ml-1.5 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-bold">{item.size}</span>}
+                    </p>
                     {item.customUnitPrice ? (
                       <p className="text-[10px] text-primary mt-1 font-semibold">
                         {item.weightKg ?? item.quantity} × {formatDZD(item.customUnitPrice)}
@@ -651,12 +855,27 @@ export default function CaissePage() {
                 </div>
               ))}
             </div>
+
           )}
         </div>
 
         {/* Totals */}
         <div className="p-6 bg-white border-t border-border space-y-4">
+          <div className="flex items-center justify-between text-sm gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowReduction(true)} className="flex-1 h-8 border-dashed text-primary hover:bg-primary/5 hover:text-primary">
+              <Plus className="h-4 w-4 mr-1" /> Réduction
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowExpense(true)} className="flex-1 h-8 border-dashed text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600">
+              <Plus className="h-4 w-4 mr-1" /> Dépense
+            </Button>
+          </div>
 
+          {reduction > 0 && (
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-bold text-muted-foreground">Réduction appliquée</span>
+              <span className="font-bold tracking-tight text-red-500">-{formatDZD(reduction)}</span>
+            </div>
+          )}
 
           <div className="h-px bg-border w-full" />
 
@@ -696,6 +915,16 @@ export default function CaissePage() {
                   </Button>
                   <Button variant="outline" className="h-20 flex-col gap-2 rounded-xl border-primary text-primary hover:bg-primary/5 transition-all" onClick={() => setShowCreditDetails(true)}>
                     <span className="text-sm font-bold uppercase tracking-widest">Crédit</span>
+                  </Button>
+                </div>
+                <div className="pt-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full h-12 border border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5"
+                    onClick={handlePrintReceipt}
+                  >
+                    <Printer className="h-5 w-5" />
+                    <span className="font-bold">Imprimer Ticket d'achat</span>
                   </Button>
                 </div>
               </>
@@ -755,12 +984,53 @@ export default function CaissePage() {
                       Confirmer le Crédit
                     </Button>
                   </div>
+                  <Button
+                    variant="ghost"
+                    className="w-full h-12 border border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5"
+                    onClick={handlePrintReceipt}
+                  >
+                    <Printer className="h-5 w-5" />
+                    <span className="font-bold">Imprimer Ticket d'achat</span>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Size Selection Modal */}
+      <Dialog open={showSizeModal} onOpenChange={setShowSizeModal}>
+        <DialogContent className="sm:max-w-sm bg-white border-0 shadow-xl rounded-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-center text-foreground border-b border-border pb-4 mb-2 tracking-tight">Veuillez choisir la Taille</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {(sizeModalProduct?.category === "chaussures" ? SHOE_SIZES : SHIRT_SIZES).map(size => {
+              const qty = sizeModalProduct?.sizeStock?.[size] || 0;
+
+              return (
+                <Button
+                  key={size}
+                  variant="outline"
+                  onClick={() => selectSize(size)}
+                  disabled={qty <= 0}
+                  className="h-24 flex flex-col items-center justify-center rounded-2xl border-2 border-border hover:border-primary hover:bg-primary/5 hover:text-primary transition-all active:scale-95 shadow-sm relative overflow-hidden disabled:opacity-50 disabled:grayscale"
+                >
+
+                  <span className="text-2xl font-black">{size}</span>
+                  <div className={`mt-1 flex items-center gap-1.5 px-2 py-0.5 rounded-full ${qty > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                    <span className="text-[10px] font-black uppercase tracking-tight">Stock: {qty}</span>
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
+
+          <Button variant="ghost" onClick={() => setShowSizeModal(false)} className="w-full mt-2 font-bold text-muted-foreground">Annuler</Button>
+        </DialogContent>
+      </Dialog>
+
 
 
       {/* Reduction modal */}
@@ -773,6 +1043,21 @@ export default function CaissePage() {
           <Button onClick={() => { setReduction(Number(tempReduction) || 0); setShowReduction(false); }} className="w-full h-11 mt-2 bg-primary hover:bg-primary/90 text-white font-black">Appliquer</Button>
         </DialogContent>
       </Dialog>
+
+      {/* Expense modal */}
+      <Dialog open={showExpense} onOpenChange={setShowExpense}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-bold text-orange-600">Ajouter Dépense</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <Input type="number" placeholder="Montant en DZD" className="h-11 border-border" value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} />
+            <Input placeholder="Note / Raison" className="h-11 border-border" value={expenseNote} onChange={e => setExpenseNote(e.target.value)} />
+            <Button onClick={handleExpenseSubmit} className="w-full h-11 mt-2 bg-orange-500 hover:bg-orange-600 text-white font-black">Enregistrer Dépense</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Custom Sale Creation Modal */}
       <Dialog open={showCustomModal} onOpenChange={open => { if (!open) closeCustomModal(); }}>
         <DialogContent className="sm:max-w-sm">
@@ -834,6 +1119,83 @@ export default function CaissePage() {
               disabled={!customCardKg || Number(customCardKg) <= 0}
             >
               AJOUTER AU PANIER
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt Preview Modal */}
+      <Dialog open={showReceiptModal} onOpenChange={setShowReceiptModal}>
+        <DialogContent className="sm:max-w-[400px] bg-gray-100 p-0 overflow-hidden border-0">
+          <div className="bg-white mx-auto my-6 p-6 shadow-lg min-h-[500px] w-[350px] font-mono text-black relative flex flex-col">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-black">MATJARI متجري</h2>
+              <p className="text-xs uppercase tracking-widest mt-1">Ticket d'achat</p>
+            </div>
+
+            <div className="border-b border-dashed border-black my-3" />
+
+            <div className="text-[10px] space-y-0.5">
+              <p>Date: {new Date().toLocaleString('fr-FR')}</p>
+              <p>Vendeur: {user?.username || 'Admin'}</p>
+              {clientName && <p className="font-bold mt-1">Client: {clientName}</p>}
+            </div>
+
+            <div className="border-b border-dashed border-black my-3" />
+
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-black text-left">
+                  <th className="pb-1">Art.</th>
+                  <th className="pb-1 text-center">Qté</th>
+                  <th className="pb-1 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {cart.map((item, i) => (
+                  <tr key={i}>
+                    <td className="py-1 line-clamp-1">{item.product.name} {item.size ? `(${item.size})` : ''}</td>
+                    <td className="py-1 text-center">{item.quantity}</td>
+                    <td className="py-1 text-right">{formatDZD(item.subtotal)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="border-b border-dashed border-black my-3" />
+
+            <div className="text-right text-xs space-y-1">
+              <p>Sous-total: {formatDZD(subtotal)}</p>
+              {reduction > 0 && <p>Réduction: -{formatDZD(reduction)}</p>}
+              <div className="flex justify-between items-center text-lg font-black pt-2 border-t border-black mt-2">
+                <span>TOTAL:</span>
+                <span>{formatDZD(total)}</span>
+              </div>
+              {showCreditDetails && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <div className="flex justify-between font-bold">
+                    <span>Payé:</span>
+                    <span>{formatDZD(Number(paidNow) || 0)}</span>
+                  </div>
+                  <div className="flex justify-between font-black text-red-600 mt-1">
+                    <span>Reste (Crédit):</span>
+                    <span>{formatDZD(Math.max(0, total - (Number(paidNow) || 0)))}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-auto pt-8 text-center text-[10px] italic">
+              Merci pour votre visite ! <br />
+              À bientôt chez MATJARI متجري
+            </div>
+          </div>
+
+          <div className="bg-white p-4 border-t border-gray-200 flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setShowReceiptModal(false)}>Annuler</Button>
+            <Button className="flex-1 bg-black hover:bg-gray-800 text-white" onClick={executePrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Confirmer & Imprimer
             </Button>
           </div>
         </DialogContent>

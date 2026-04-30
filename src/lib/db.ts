@@ -1,11 +1,11 @@
 import Database, { type QueryResult } from "@tauri-apps/plugin-sql";
-import { Product, Sale, Client, Payment, Supplier, Invoice, CustomSaleCard, User } from "./types";
+import { Product, Sale, Client, Payment, Supplier, Invoice, CustomSaleCard, User, Expense } from "./types";
 
 const DB_FILENAME = "mimicha.db";
 const LEGACY_DB_FILENAME = "novadeco.db";
 const DB_URI = `sqlite:${DB_FILENAME}`;
 const LEGACY_DB_URI = `sqlite:${LEGACY_DB_FILENAME}`;
-const APP_TABLES = ["products", "clients", "suppliers", "sales", "payments", "invoices", "custom_cards", "users"] as const;
+const APP_TABLES = ["products", "clients", "suppliers", "sales", "payments", "invoices", "custom_cards", "users", "expenses"] as const;
 
 type RawSaleRow = Omit<Sale, "items"> & { items: string };
 type RawInvoiceRow = Omit<Invoice, "supplier" | "items"> & { supplier: string; items: string };
@@ -84,8 +84,10 @@ async function createTables(database: Database) {
         stock REAL NOT NULL,
         unit TEXT NOT NULL,
                 barcode TEXT,
-                expiryDate TEXT
+                expiryDate TEXT,
+                sizeStock TEXT
       )
+
     `);
 
     await database.execute(`
@@ -167,6 +169,15 @@ async function createTables(database: Database) {
       )
     `);
 
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id TEXT PRIMARY KEY,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT NOT NULL
+      )
+    `);
+
     // Performance Indexes
     await database.execute(`CREATE INDEX IF NOT EXISTS idx_sales_date ON sales(date)`);
     await database.execute(`CREATE INDEX IF NOT EXISTS idx_sales_type ON sales(type)`);
@@ -175,6 +186,7 @@ async function createTables(database: Database) {
     await database.execute(`CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(date)`);
     await database.execute(`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`);
     await database.execute(`CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name)`);
+    await database.execute(`CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date)`);
 }
 
 async function hasAnyAppData(database: Database): Promise<boolean> {
@@ -199,9 +211,10 @@ async function upsertProducts(database: Database, products: Product[]) {
     for (const product of products) {
         await runExecute(
             database,
-            "INSERT OR REPLACE INTO products (id, name, nameAr, category, priceSale, priceBuy, stock, unit, barcode, expiryDate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-            [product.id, product.name, product.nameAr, product.category, product.priceSale, product.priceBuy, product.stock, product.unit, product.barcode || null, product.expiryDate || null]
+            "INSERT OR REPLACE INTO products (id, name, nameAr, category, priceSale, priceBuy, stock, unit, barcode, expiryDate, sizeStock) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+            [product.id, product.name, product.nameAr, product.category, product.priceSale, product.priceBuy, product.stock, product.unit, product.barcode || null, product.expiryDate || null, product.sizeStock ? JSON.stringify(product.sizeStock) : null]
         );
+
     }
 }
 
@@ -359,10 +372,11 @@ export async function initDb() {
                 } catch (e) { /* ignore if already exists */ }
 
                 try {
-                    await database.execute("ALTER TABLE invoices ADD COLUMN editedBy TEXT");
+                    await database.execute("ALTER TABLE products ADD COLUMN sizeStock TEXT");
                 } catch (e) { /* ignore if already exists */ }
 
                 await migrateLegacyDatabase(database);
+
 
                 // Removed default products insertion to allow clear usage
 
@@ -385,8 +399,13 @@ function defaultProducts(): Product[] {
 export async function getProducts(): Promise<Product[]> {
     try {
         const database = await initDb();
-        return await runSelect<Product[]>(database, "SELECT * FROM products ORDER BY name ASC");
+        const rows = await runSelect<any[]>(database, "SELECT * FROM products ORDER BY name ASC");
+        return rows.map(r => ({
+            ...r,
+            sizeStock: r.sizeStock ? JSON.parse(r.sizeStock) : undefined
+        }));
     } catch (error) {
+
         console.error("error getting products", error);
         return [];
     }
@@ -417,9 +436,10 @@ export async function updateProduct(product: Product) {
         const database = await initDb();
         await runExecute(
             database,
-            "UPDATE products SET name = $1, nameAr = $2, category = $3, priceSale = $4, priceBuy = $5, stock = $6, unit = $7, barcode = $8, expiryDate = $9 WHERE id = $10",
-            [product.name, product.nameAr, product.category, product.priceSale, product.priceBuy, product.stock, product.unit, product.barcode || null, product.expiryDate || null, product.id]
+            "UPDATE products SET name = $1, nameAr = $2, category = $3, priceSale = $4, priceBuy = $5, stock = $6, unit = $7, barcode = $8, expiryDate = $9, sizeStock = $10 WHERE id = $11",
+            [product.name, product.nameAr, product.category, product.priceSale, product.priceBuy, product.stock, product.unit, product.barcode || null, product.expiryDate || null, product.sizeStock ? JSON.stringify(product.sizeStock) : null, product.id]
         );
+
     } catch (error) {
         console.error("error updating product", error);
         throw error;
@@ -693,6 +713,47 @@ export async function deletePayment(id: string) {
         }
     } catch (error) {
         console.error("error deleting payment", error);
+        throw error;
+    }
+}
+
+// Expenses
+export async function getExpenses(monthPrefix?: string): Promise<Expense[]> {
+    try {
+        const database = await initDb();
+        let query = "SELECT * FROM expenses ORDER BY date DESC";
+        let params: any[] = [];
+        if (monthPrefix) {
+            query = "SELECT * FROM expenses WHERE date LIKE $1 ORDER BY date DESC";
+            params = [monthPrefix + '%'];
+        }
+        return await runSelect<Expense[]>(database, query, params);
+    } catch (error) {
+        console.error("error getting expenses", error);
+        return [];
+    }
+}
+
+export async function addExpense(expense: Expense) {
+    try {
+        const database = await initDb();
+        await runExecute(
+            database,
+            "INSERT OR REPLACE INTO expenses (id, amount, date, note) VALUES ($1, $2, $3, $4)",
+            [expense.id, expense.amount, expense.date, expense.note]
+        );
+    } catch (error) {
+        console.error("error adding expense", error);
+        throw error;
+    }
+}
+
+export async function deleteExpense(id: string) {
+    try {
+        const database = await initDb();
+        await database.execute("DELETE FROM expenses WHERE id = $1", [id]);
+    } catch (error) {
+        console.error("error deleting expense", error);
         throw error;
     }
 }

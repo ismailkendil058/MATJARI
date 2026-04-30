@@ -1,4 +1,4 @@
-export type CategoryType = "cigarettes" | "chemma" | "chocolates" | "drinks" | "snacks" | "cosmetics" | "divers";
+export type CategoryType = "hauts" | "pantalons" | "chaussures" | "accessoires" | "parfums" | "sport" | "sousvetements" | "vestes";
 
 export interface Product {
     id: string;
@@ -9,6 +9,7 @@ export interface Product {
     priceSale: number;
     priceBuy: number;
     stock: number;
+    sizeStock?: Record<string, number>;
     unit: "unité" | "kg";
     expiryDate?: string;
 }
@@ -16,7 +17,10 @@ export interface Product {
 export interface CartItem {
     product: Product;
     quantity: number;
+    size?: string;
+    sizeQtys?: Record<string, number>;
     weightKg?: number;
+
     subtotal: number;
     customUnitPrice?: number;
     customUnitCost?: number;
@@ -62,6 +66,13 @@ export interface Payment {
     note?: string;
 }
 
+export interface Expense {
+    id: string;
+    amount: number;
+    date: string;
+    note: string;
+}
+
 export interface Supplier {
     id: string;
     name: string;
@@ -72,7 +83,10 @@ export interface Supplier {
 export interface InvoiceItem {
     product: Product;
     quantity: number;
+    size?: string;
+    sizeQtys?: Record<string, number>;
     priceBuy: number;
+
     priceSale: number;
     expiryDate?: string;
 }

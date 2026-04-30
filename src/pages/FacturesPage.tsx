@@ -1,44 +1,40 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
-  Plus, RotateCcw, Search, Eye, ArrowLeft, Package, PackagePlus, X,
-  Cigarette, Cookie, CupSoda, Grid, Candy, Sparkles
+  Plus, RotateCcw, Search, Eye, ArrowLeft, Package, PackagePlus, X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  getInvoices, addInvoice, getSuppliers, addSupplier, getProducts, saveProducts, updateProductStock, deleteInvoice
+  getInvoices, addInvoice, getSuppliers, addSupplier, getProducts, saveProducts, updateProductStock, deleteInvoice, updateProduct
 } from "@/lib/db";
+
 import { Invoice, InvoiceItem, Supplier, Product, CategoryType } from "@/lib/types";
 import { formatDZD, generateId, CATEGORIES } from "@/lib/store";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthContext";
 
-const categoryIcons: Record<CategoryType, React.ElementType> = {
-  cigarettes: Cigarette,
-  chemma: Package,
-  chocolates: Cookie,
-  drinks: CupSoda,
-  snacks: Candy,
-  cosmetics: Sparkles,
-  divers: Grid,
+const categoryColors: Record<CategoryType, string> = {
+  hauts: "bg-blue-50 text-blue-600 border-blue-100",
+  pantalons: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  chaussures: "bg-indigo-50 text-indigo-600 border-indigo-100",
+  accessoires: "bg-amber-50 text-amber-600 border-amber-100",
+  parfums: "bg-rose-50 text-rose-600 border-rose-100",
+  sport: "bg-orange-50 text-orange-600 border-orange-100",
+  sousvetements: "bg-slate-50 text-slate-600 border-slate-100",
+  vestes: "bg-cyan-50 text-cyan-600 border-cyan-100",
 };
 
-const categoryColors: Record<CategoryType, string> = {
-  cigarettes: "bg-[#be123c] hover:bg-[#9f1239] text-white",
-  chemma: "bg-[#713f12] hover:bg-[#451a03] text-white",
-  chocolates: "bg-[#7e22ce] hover:bg-[#6b21a8] text-white",
-  drinks: "bg-[#0369a1] hover:bg-[#075985] text-white",
-  snacks: "bg-[#f59e0b] hover:bg-[#d97706] text-white",
-  cosmetics: "bg-[#db2777] hover:bg-[#be185d] text-white",
-  divers: "bg-[#4b5563] hover:bg-[#374151] text-white",
-};
+const SIZE_CATEGORIES: CategoryType[] = ["hauts", "sport", "sousvetements", "vestes", "chaussures"];
+
 
 type View = "list" | "add" | "return";
 type InvoiceFormItem = {
   productId: string;
+  size?: string;
+  sizeQtys?: Record<string, number>;
   isNew: boolean;
   newName: string;
   newCategory: string;
@@ -49,11 +45,13 @@ type InvoiceFormItem = {
   expiryDate: string;
 };
 
+
+
 const createInvoiceFormItem = (): InvoiceFormItem => ({
   productId: "",
   isNew: false,
   newName: "",
-  newCategory: "cigarettes",
+  newCategory: "hauts",
   barcode: "",
   quantity: 1,
   priceBuy: 0,
@@ -88,7 +86,7 @@ export default function FacturesPage() {
   const [dateFilter, setDateFilter] = useState("");
   const [view, setView] = useState<View>("list");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [activeCategory, setActiveCategory] = useState<CategoryType | null>("cigarettes");
+  const [activeCategory, setActiveCategory] = useState<CategoryType | null>("hauts");
   const [mobileSection, setMobileSection] = useState<"products" | "cart">("products");
 
   // Add form state
@@ -110,8 +108,14 @@ export default function FacturesPage() {
   const [itemQty, setItemQty] = useState<number | "">("");
   const [itemBuy, setItemBuy] = useState<number | "">("");
   const [itemSale, setItemSale] = useState<number | "">("");
-  const [itemCategory, setItemCategory] = useState<CategoryType>("cigarettes");
+  const [itemCategory, setItemCategory] = useState<CategoryType>("hauts");
   const [itemBarcode, setItemBarcode] = useState("");
+  const SHIRT_SIZES = ["S", "M", "L", "XL"];
+  const SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
+  const [sizeQtys, setSizeQtys] = useState<Record<string, number>>({});
+
+
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -158,29 +162,71 @@ export default function FacturesPage() {
       }
     }
 
-    const newItem: InvoiceFormItem = {
-      productId,
-      isNew,
-      newName: isNew ? itemName : "",
-      barcode: isNew ? (itemBarcode || undefined) : selectedProduct?.barcode,
-      newCategory: selectedProduct ? selectedProduct.category : itemCategory,
-      quantity: Number(itemQty),
-      priceBuy: Number(itemBuy),
-      priceSale: Number(itemSale),
-      expiryDate: ""
-    };
+    if (SIZE_CATEGORIES.includes(itemCategory)) {
 
-    setInvoiceItems(prev => [...prev, newItem]);
+      const activeSizes = Object.entries(sizeQtys).filter(([_, qty]) => qty > 0);
+      if (activeSizes.length > 0) {
+        const totalQty = activeSizes.reduce((sum, [_, qty]) => sum + qty, 0);
+        const combinedSize = activeSizes.map(([size, qty]) => `${size}: ${qty}`).join(" | ");
+        const newItem: InvoiceFormItem = {
+          productId,
+          size: combinedSize,
+          sizeQtys: { ...sizeQtys },
+          isNew,
+          newName: isNew ? itemName : "",
+          barcode: isNew ? (itemBarcode || undefined) : selectedProduct?.barcode,
+          newCategory: selectedProduct ? selectedProduct.category : itemCategory,
+          quantity: totalQty,
+          priceBuy: Number(itemBuy),
+          priceSale: Number(itemSale),
+          expiryDate: ""
+        };
+
+        setInvoiceItems(prev => [...prev, newItem]);
+      } else if (itemQty && Number(itemQty) > 0) {
+        // Fallback to itemQty if no size quantities but itemQty is set
+        const newItem: InvoiceFormItem = {
+          productId,
+          isNew,
+          newName: isNew ? itemName : "",
+          barcode: isNew ? (itemBarcode || undefined) : selectedProduct?.barcode,
+          newCategory: selectedProduct ? selectedProduct.category : itemCategory,
+          quantity: Number(itemQty),
+          priceBuy: Number(itemBuy),
+          priceSale: Number(itemSale),
+          expiryDate: ""
+        };
+        setInvoiceItems(prev => [...prev, newItem]);
+      }
+    } else {
+      const newItem: InvoiceFormItem = {
+        productId,
+        isNew,
+        newName: isNew ? itemName : "",
+        barcode: isNew ? (itemBarcode || undefined) : selectedProduct?.barcode,
+        newCategory: selectedProduct ? selectedProduct.category : itemCategory,
+        quantity: Number(itemQty),
+        priceBuy: Number(itemBuy),
+        priceSale: Number(itemSale),
+        expiryDate: ""
+      };
+      setInvoiceItems(prev => [...prev, newItem]);
+    }
+
     // Reset bar
     setItemName("");
     setItemQty("");
     setItemBuy("");
     setItemSale("");
-    setItemCategory("cigarettes");
+    setItemCategory("hauts");
     setSelectedProduct(null);
     setItemBarcode("");
+    setSizeQtys({});
+
     setShowSuggestions(false);
   };
+
+
 
   const filtered = useMemo(() => {
     return invoices.filter(inv => {
@@ -259,18 +305,31 @@ export default function FacturesPage() {
       quantity: item.quantity,
       priceBuy: item.priceBuy,
       priceSale: item.priceSale,
+      size: item.size,
       expiryDate: item.expiryDate || "",
     })));
+
     setSelectedInvoice(null);
     setView("add");
   };
 
   const revertStockForInvoice = async (invoice: Invoice) => {
     const factor = invoice.type === "achat" ? -1 : 1;
+    const currentProds = await getProducts();
     for (const item of invoice.items) {
-      await updateProductStock(item.product.id, item.quantity * factor);
+      const prod = currentProds.find(p => p.id === item.product.id);
+      if (prod) {
+        const nextSizeStock = { ...(prod.sizeStock || {}) };
+        if (item.sizeQtys) {
+          Object.entries(item.sizeQtys).forEach(([sz, q]) => {
+            nextSizeStock[sz] = (nextSizeStock[sz] || 0) + (q * factor);
+          });
+        }
+        await updateProduct({ ...prod, stock: prod.stock + (item.quantity * factor), sizeStock: nextSizeStock });
+      }
     }
   };
+
 
   const handleSubmitInvoice = async () => {
     try {
@@ -318,9 +377,16 @@ export default function FacturesPage() {
           }
 
           if (existing) {
+            const nextSizeStock = { ...(existing.sizeStock || {}) };
+            if (item.sizeQtys) {
+              Object.entries(item.sizeQtys).forEach(([sz, q]) => {
+                nextSizeStock[sz] = (nextSizeStock[sz] || 0) + q;
+              });
+            }
             product = {
               ...existing,
               stock: existing.stock + item.quantity,
+              sizeStock: nextSizeStock,
               priceBuy: item.priceBuy,
               priceSale: item.priceSale,
               expiryDate: item.expiryDate || existing.expiryDate,
@@ -329,7 +395,9 @@ export default function FacturesPage() {
           } else {
             product = {
               id: generateId(), name: item.newName, nameAr: "", category: item.newCategory as any,
-              priceSale: item.priceSale, priceBuy: item.priceBuy, stock: item.quantity, unit: "unité", expiryDate: item.expiryDate || undefined,
+              priceSale: item.priceSale, priceBuy: item.priceBuy, stock: item.quantity,
+              sizeStock: item.sizeQtys ? { ...item.sizeQtys } : undefined,
+              unit: "unité", expiryDate: item.expiryDate || undefined,
               // include barcode if provided
               ...(item.barcode ? { barcode: item.barcode } : {})
             };
@@ -338,17 +406,27 @@ export default function FacturesPage() {
         } else {
           const existing = currentProducts.find(p => p.id === item.productId);
           if (!existing) continue;
+          const nextSizeStock = { ...(existing.sizeStock || {}) };
+          if (item.sizeQtys) {
+            Object.entries(item.sizeQtys).forEach(([sz, q]) => {
+              nextSizeStock[sz] = (nextSizeStock[sz] || 0) + q;
+            });
+          }
           product = {
             ...existing,
             stock: existing.stock + item.quantity,
+            sizeStock: nextSizeStock,
             priceBuy: item.priceBuy,
             priceSale: item.priceSale,
             expiryDate: item.expiryDate || existing.expiryDate,
           };
           changedProducts.push(product);
         }
-        items.push({ product, quantity: item.quantity, priceBuy: item.priceBuy, priceSale: item.priceSale, expiryDate: item.expiryDate });
+        items.push({ product, quantity: item.quantity, size: item.size, sizeQtys: item.sizeQtys, priceBuy: item.priceBuy, priceSale: item.priceSale, expiryDate: item.expiryDate });
       }
+
+
+
 
       if (changedProducts.length > 0) {
         await saveProducts(changedProducts);
@@ -496,7 +574,8 @@ export default function FacturesPage() {
 
         <div className="flex-1 overflow-auto bg-slate-50/20 p-6 flex flex-col gap-6">
           {/* SECTION 1: HEADER (Fournisseur) */}
-          <div className="bg-white border rounded-xl p-5 shadow-sm max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+          <div className="bg-white border rounded-xl p-5 shadow-sm max-w-[1750px] mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+
             <div className="space-y-1.5 flex-1 relative">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1">Fournisseur (Optionnel)</label>
               <Input
@@ -540,11 +619,13 @@ export default function FacturesPage() {
           </div>
 
           {/* SECTION 2: ADD PRODUCT ENTRY BAR */}
-          <div className="bg-white border rounded-xl p-5 shadow-sm max-w-6xl mx-auto w-full">
+          <div className="bg-white border rounded-xl p-5 shadow-sm max-w-[1750px] mx-auto w-full">
+
             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1 block mb-3">Ajouter un produit à la facture</label>
             <div className="flex items-end gap-3 flex-wrap md:flex-nowrap">
               {/* Product Name with Suggestions */}
-              <div className="relative flex-1 min-w-[300px] space-y-1.5">
+              <div className="relative flex-1 min-w-[450px] space-y-1.5">
+
                 <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">Désignation Produit</label>
                 <div className="flex items-end gap-2">
                   <Input
@@ -581,7 +662,7 @@ export default function FacturesPage() {
                         className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b last:border-0 border-slate-100 transition-colors flex items-center justify-between group"
                       >
                         <div>
-                          <p className="font-bold text-sm text-slate-900 group-hover:text-[#be123c] transition-colors">{p.name}</p>
+                          <p className="font-bold text-sm text-slate-900 group-hover:text-primary transition-colors">{p.name}</p>
                           {p.barcode && (
                             <p className="text-[10px] text-slate-500 mt-1">Code-barre: {p.barcode}</p>
                           )}
@@ -604,27 +685,42 @@ export default function FacturesPage() {
                   <SelectContent>
                     {CATEGORIES.map(cat => (
                       <SelectItem key={cat.key} value={cat.key}>
-                        <div className="flex items-center gap-2">
-                          {React.createElement(categoryIcons[cat.key], { className: "h-3.5 w-3.5" })}
-                          <span>{cat.label}</span>
-                        </div>
+                        <span>{cat.label}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Quantity */}
-              <div className="w-24 space-y-1.5">
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 text-center block">Qté</label>
-                <Input
-                  type="number"
-                  value={itemQty}
-                  onChange={e => setItemQty(e.target.value === "" ? "" : Number(e.target.value))}
-                  placeholder="Qté"
-                  className="h-11 text-center font-black border-slate-200 bg-slate-50 focus:bg-white"
-                />
-              </div>
+              {/* Multi-Size Quantities (Clothing or Shoes) */}
+              {SIZE_CATEGORIES.includes(itemCategory) ? (
+                <div className="flex gap-2">
+                  {(itemCategory === "chaussures" ? SHOE_SIZES : SHIRT_SIZES).map(size => (
+                    <div key={size} className={itemCategory === "chaussures" ? "w-11 space-y-1.5 text-center" : "w-14 space-y-1.5 text-center"}>
+                      <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">{size}</label>
+                      <Input
+                        type="number"
+                        value={sizeQtys[size] || ""}
+                        onChange={e => setSizeQtys(prev => ({ ...prev, [size]: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                        placeholder={size}
+                        className="h-11 text-center font-bold border-slate-200 bg-white p-0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="w-24 space-y-1.5">
+                  <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 text-center block">Qté</label>
+                  <Input
+                    type="number"
+                    value={itemQty}
+                    onChange={e => setItemQty(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="Qté"
+                    className="h-11 text-center font-black border-slate-200 bg-slate-50 focus:bg-white"
+                  />
+                </div>
+              )}
+
 
               {/* Prix Achat */}
               <div className="w-32 space-y-1.5">
@@ -653,7 +749,7 @@ export default function FacturesPage() {
               {/* Action Button */}
               <Button
                 onClick={handleValidateItem}
-                className="h-11 bg-slate-900 border-2 border-slate-900 hover:bg-[#be123c] hover:border-[#be123c] text-white px-8 rounded-lg font-black uppercase text-[11px] tracking-widest transition-all"
+                className="h-11 bg-slate-900 border-2 border-slate-900 hover:bg-primary hover:border-primary text-white px-8 rounded-lg font-black uppercase text-[11px] tracking-widest transition-all"
               >
                 Valider le produit
               </Button>
@@ -661,7 +757,8 @@ export default function FacturesPage() {
           </div>
 
           {/* SECTION 3: ITEMS TABLE */}
-          <div className="bg-white border rounded-xl shadow-sm max-w-6xl mx-auto w-full overflow-hidden flex-1 flex flex-col min-h-[400px]">
+          <div className="bg-white border rounded-xl shadow-sm max-w-[1750px] mx-auto w-full overflow-hidden flex-1 flex flex-col min-h-[400px]">
+
             <div className="flex-1 overflow-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead className="bg-slate-50 border-b sticky top-0 z-10">
@@ -701,7 +798,13 @@ export default function FacturesPage() {
                             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${categoryColors[item.newCategory as CategoryType] || "bg-slate-100 text-slate-600"}`}>
                               {item.newCategory}
                             </span>
+                            {item.size && (
+                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                {item.size}
+                              </span>
+                            )}
                           </div>
+
                           {item.isNew && <p className="text-[9px] font-black uppercase text-amber-600 mt-1">Nouveau Produit</p>}
                         </td>
                         <td className="px-6 py-3 text-center">
@@ -759,7 +862,7 @@ export default function FacturesPage() {
         <footer className="h-24 bg-white border-t flex items-center justify-between px-10 shrink-0">
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 leading-none mb-1">Total de la facture</span>
-            <p className="text-4xl font-black text-[#be123c] tracking-tighter leading-none">{formatDZD(invoiceTotal)}</p>
+            <p className="text-4xl font-black text-primary tracking-tighter leading-none">{formatDZD(invoiceTotal)}</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -769,7 +872,7 @@ export default function FacturesPage() {
             <Button
               onClick={handleSubmitInvoice}
               disabled={invoiceItems.length === 0}
-              className="h-14 px-12 bg-slate-900 hover:bg-[#be123c] text-white text-lg font-black rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-20 flex items-center gap-3"
+              className="h-14 px-12 bg-slate-900 hover:bg-primary text-white text-lg font-black rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-20 flex items-center gap-3"
             >
               Valider la facture
               <Plus className="h-5 w-5" />
@@ -1218,7 +1321,10 @@ export default function FacturesPage() {
                   <tbody className="divide-y divide-gray-50">
                     {selectedInvoice.items.map((item, idx) => (
                       <tr key={idx}>
-                        <td className="py-4 font-bold text-[#243740]">{item.product.name}</td>
+                        <td className="py-4 font-bold text-[#243740]">
+                          {item.product.name}
+                          {item.size && <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] uppercase font-black tracking-widest">{item.size}</span>}
+                        </td>
                         <td className="py-4 text-center font-bold text-gray-500">{item.quantity}</td>
                         <td className="py-4 text-right font-medium text-gray-500">{formatDZD(item.priceBuy)}</td>
                         <td className="py-4 text-right font-black text-[#243740]">{formatDZD(item.priceBuy * item.quantity)}</td>

@@ -1,5 +1,5 @@
-const CACHE_NAME = "cosmetique-logistics-pwa-v1";
-const APP_SHELL = ["/", "/manifest.json", "/store-icon.jpg"];
+const CACHE_NAME = "matjari-pwa-v1";
+const APP_SHELL = ["/", "/manifest.json", "/download (2).jpg"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

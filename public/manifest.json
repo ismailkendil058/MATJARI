@@ -1,8 +1,8 @@
 {
     "id": "/",
-    "name": "TABACO",
-    "short_name": "TABACO",
-    "description": "TABACO management application",
+    "name": "Matjari متجري",
+    "short_name": "Matjari",
+    "description": "Matjari management application",
     "lang": "fr",
     "start_url": "/",
     "scope": "/",

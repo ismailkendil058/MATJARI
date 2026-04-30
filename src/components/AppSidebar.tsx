@@ -30,34 +30,34 @@ export function AppSidebar() {
   const currentNavItems = user?.role === "admin" ? adminNavItems : navItems;
 
   return (
-    <aside className="w-48 min-h-screen bg-white flex flex-col border-r border-gray-200 shadow-sm z-20 font-sans">
+    <aside className="w-64 min-h-screen bg-white flex flex-col border-r border-gray-200 shadow-sm z-20 font-sans">
       {/* Logout button top left as requested */}
-      <div className="p-3 border-b border-gray-100 bg-gray-50/30">
+      <div className="p-4 border-b border-gray-100 bg-gray-50/30">
         <Button
           variant="ghost"
-          size="sm"
+          size="default"
           onClick={handleLogout}
-          className="w-full flex items-center justify-start gap-2 text-[#be123c] hover:bg-rose-50 hover:text-[#9f1239] font-bold"
+          className="w-full flex items-center justify-start gap-3 text-primary hover:bg-primary/10 hover:text-primary/90 font-bold text-base py-6"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5" />
           <span>Déconnecter</span>
         </Button>
       </div>
 
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-gray-100 flex flex-col items-start">
-        <h1 className="text-[28px] font-black tracking-tighter">
-          <span className="text-[#be123c]">TABA</span><span className="text-gray-400">CO</span>
+      <div className="px-6 py-8 border-b border-gray-100 flex flex-col items-start">
+        <h1 className="text-[34px] font-black tracking-tighter">
+          <span className="text-primary">Matjari</span> <span className="text-gray-400 text-xl font-bold uppercase tracking-[0.2em]">متجري</span>
         </h1>
         {user && (
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">
             {user.role === 'admin' ? '🔥 Admin' : '👤 Worker'}: {user.username}
           </p>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-8 space-y-4">
         {currentNavItems.map((item) => {
           const isActive = location.pathname === item.url;
           return (
@@ -65,13 +65,13 @@ export function AppSidebar() {
               key={item.url}
               to={item.url}
               end
-              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition-all duration-200 group font-bold ${isActive
-                ? "bg-[#be123c] text-white shadow-[0_4px_14px_0_rgba(190,18,60,0.3)] hover:-translate-y-0.5"
+              className={`flex items-center gap-4 px-5 py-4 rounded-xl text-lg transition-all duration-200 group font-bold ${isActive
+                ? "bg-primary text-white shadow-md shadow-primary/30 hover:-translate-y-0.5"
                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               activeClassName=""
             >
-              <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-gray-400 group-hover:text-[#be123c]"}`} strokeWidth={isActive ? 2.5 : 2} />
+              <item.icon className={`h-6 w-6 ${isActive ? "text-white" : "text-gray-400 group-hover:text-primary"}`} strokeWidth={isActive ? 2.5 : 2} />
               <span className="tracking-wide">{item.title}</span>
             </NavLink>
           );
@@ -80,7 +80,7 @@ export function AppSidebar() {
 
       {/* Footer */}
       <div className="px-5 py-5 border-t border-gray-100 bg-gray-50/50">
-        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">© 2026 TABACO · Algérie</p>
+        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">© 2026 Matjari متجري · Algérie</p>
       </div>
     </aside>
   );
