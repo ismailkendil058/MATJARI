@@ -1,57 +1,40 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Search, Plus, Minus, Trash2, Package, Shirt, Sparkles, Watch, Dumbbell, Footprints, Layers, Printer } from "lucide-react";
+import {
+  Search, Plus, Minus, Trash2, Package, Shirt, Sparkles, Watch, Dumbbell, Footprints, Layers, Printer,
+  ShoppingBag, Gem, Palette, Crown, Heart, Star, Flower2, Sun, Moon, Zap, Coffee, Gift,
+  Glasses, Scissors, Umbrella, Music, Camera, Headphones,
+  type LucideIcon
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   getClients, saveClients, updateClientCredit, addSale, getSales,
   getProducts, updateProductStock, getCustomCards, saveCustomCards,
-  addExpense, updateProduct, getNextTicketId
+  addExpense, updateProduct, getNextTicketId, getCategories
 } from "@/lib/db";
 
-import { Product, CartItem, CategoryType, CustomSaleCard, Client, Sale, Expense } from "@/lib/types";
-import { CATEGORIES, formatDZD, generateId } from "@/lib/store";
+import { Product, CartItem, CategoryType, CustomSaleCard, Client, Sale, Expense, Category } from "@/lib/types";
+import { formatDZD, generateId } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthContext";
 
-const categoryColors: Record<CategoryType, string> = {
-  hauts: "bg-[#9DC6D8] hover:bg-[#8AB6C8] text-white",
-  pantalons: "bg-[#6B909B] hover:bg-[#5A7F8A] text-white",
-  chaussures: "bg-[#5F676D] hover:bg-[#4E565C] text-white",
-  accessoires: "bg-[#34675C] hover:bg-[#23564B] text-white",
-  parfums: "bg-[#A58AB7] hover:bg-[#9479A6] text-white",
-  sport: "bg-[#E16969] hover:bg-[#D05858] text-white",
-  sousvetements: "bg-[#E5A862] hover:bg-[#D49751] text-white",
-  vestes: "bg-[#7A9CA5] hover:bg-[#698B94] text-white",
+// Icon registry for resolving icon names to components
+const LUCIDE_ICON_MAP: Record<string, LucideIcon> = {
+  Shirt, Layers, Footprints, Watch, Sparkles, Dumbbell,
+  Package, ShoppingBag, Gem, Palette, Crown, Heart,
+  Star, Flower2, Sun, Moon, Zap, Coffee, Gift,
+  Glasses, Scissors, Umbrella, Music, Camera, Headphones,
 };
 
-const SIZE_CATEGORIES: CategoryType[] = ["hauts", "sport", "sousvetements", "vestes", "chaussures"];
-
-
-const categoryIcons: Record<CategoryType, any> = {
-  hauts: Shirt,
-  pantalons: Layers,
-  chaussures: Footprints,
-  accessoires: Watch,
-  parfums: Sparkles,
-  sport: Dumbbell,
-  sousvetements: Layers,
-  vestes: Shirt,
-};
-
-const SHIRT_SIZES = ["S", "M", "L", "XL"];
-const SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
-
-
-
-const customizableCategories = new Set<CategoryType>(["parfums"]);
-
+const SHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
+const SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45", "46", "47"];
 
 export default function CaissePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<CategoryType | null>("hauts");
+  const [activeCategory, setActiveCategory] = useState<CategoryType | null>(null);
   const [barcodeInput, setBarcodeInput] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -91,6 +74,59 @@ export default function CaissePage() {
   const [returnQtys, setReturnQtys] = useState<Record<string, number>>({});
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
 
+  // Dynamic categories from database
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+
+  // Derived lookups from dynamic categories
+  const categoryColors = useMemo(() => {
+    const map: Record<string, string> = {};
+    dbCategories.forEach(c => {
+      map[c.key] = `bg-[${c.color}] hover:bg-[${c.hoverColor}] text-white`;
+    });
+    return map;
+  }, [dbCategories]);
+
+  const categoryIcons = useMemo(() => {
+    const map: Record<string, any> = {};
+    dbCategories.forEach(c => {
+      map[c.key] = LUCIDE_ICON_MAP[c.icon] || Package;
+    });
+    return map;
+  }, [dbCategories]);
+
+  const SIZE_CATEGORIES = useMemo(() => {
+    return dbCategories.filter(c => c.hasTailles || c.hasPointure).map(c => c.key);
+  }, [dbCategories]);
+
+  const customizableCategories = useMemo(() => {
+    return new Set(dbCategories.filter(c => c.hasVentePersonnalisee).map(c => c.key));
+  }, [dbCategories]);
+
+  const dynamicCATEGORIES = useMemo(() => {
+    return dbCategories.map(c => ({ key: c.key, label: c.label, labelAr: c.labelAr }));
+  }, [dbCategories]);
+
+  // Helper: is this a pointure (shoe) category?
+  const isPointureCategory = useCallback((catKey: string) => {
+    return dbCategories.some(c => c.key === catKey && c.hasPointure);
+  }, [dbCategories]);
+
+  // Helper: get custom icon data URI if available
+  const getCategoryCustomIcon = useCallback((catKey: string) => {
+    return dbCategories.find(c => c.key === catKey)?.customIcon;
+  }, [dbCategories]);
+
+  // Helper: get the color style object for inline styling
+  const getCategoryColorStyle = useCallback((catKey: string): React.CSSProperties => {
+    const cat = dbCategories.find(c => c.key === catKey);
+    return cat ? { backgroundColor: cat.color } : {};
+  }, [dbCategories]);
+
+  const getCategoryHoverColorStyle = useCallback((catKey: string): React.CSSProperties => {
+    const cat = dbCategories.find(c => c.key === catKey);
+    return cat ? { backgroundColor: cat.hoverColor } : {};
+  }, [dbCategories]);
+
 
   const getCustomCardPendingKg = useCallback((cardId: string) => {
     return cart.reduce((sum, item) => {
@@ -117,14 +153,20 @@ export default function CaissePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [prods, cards, cls] = await Promise.all([
+        const [prods, cards, cls, cats] = await Promise.all([
           getProducts(),
           getCustomCards(),
-          getClients()
+          getClients(),
+          getCategories(),
         ]);
         setProducts(prods);
         setCustomCards(cards);
         setClients(cls);
+        setDbCategories(cats);
+        // Set default active category to first category
+        if (cats.length > 0) {
+          setActiveCategory(cats[0].key);
+        }
       } catch (error) {
         console.error("Error loading Caisse data:", error);
       }
@@ -819,15 +861,24 @@ export default function CaissePage() {
         {/* Category filters - mobile */}
         <div className="mobile-scroll-x flex gap-2 overflow-x-auto pb-3 lg:hidden w-full">
           <div className="flex w-full gap-2">
-            {CATEGORIES.map(cat => {
+            {dynamicCATEGORIES.map(cat => {
+              const catData = dbCategories.find(c => c.key === cat.key);
               return (
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
-                  className={`flex-1 min-w-[72px] aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-1 shadow-sm border border-transparent ${categoryColors[cat.key]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  className={`flex-1 min-w-[72px] aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-1 shadow-sm border border-transparent text-white ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  style={{ backgroundColor: catData?.color || '#9DC6D8' }}
                 >
-                  <div className="font-black text-lg md:text-2xl tracking-wider text-center leading-tight">{cat.labelAr}</div>
-                  <span className="font-bold text-[10px] md:text-xs opacity-75 tracking-widest text-center uppercase mx-auto">{cat.label}</span>
+                  {(() => {
+                    if (catData?.customIcon) {
+                      return <img src={catData.customIcon} alt="icon" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-sm mb-1" />;
+                    }
+                    const CatIcon = categoryIcons[cat.key] || Package;
+                    return <CatIcon className="h-6 w-6 md:h-8 md:w-8 mb-1 drop-shadow-sm opacity-90" strokeWidth={2} />;
+                  })()}
+                  <div className="font-black text-xs md:text-sm tracking-wider text-center leading-tight line-clamp-1">{cat.labelAr}</div>
+                  <span className="font-bold text-[8px] md:text-[9px] opacity-75 tracking-widest text-center uppercase mx-auto line-clamp-1">{cat.label}</span>
                 </button>
               );
             })}
@@ -861,6 +912,10 @@ export default function CaissePage() {
                   )}
                   <div className="flex-1 flex items-center justify-center pt-6 pb-2 w-full pointer-events-none">
                     {(() => {
+                      const customIcon = getCategoryCustomIcon(product.category);
+                      if (customIcon) {
+                        return <img src={customIcon} alt="icon" className="h-20 w-20 object-contain drop-shadow-sm group-hover:scale-110 transition-transform opacity-80 group-hover:opacity-100" />;
+                      }
                       const ProductIcon = categoryIcons[product.category] || Package;
                       return <ProductIcon className="h-20 w-20 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all drop-shadow-sm" strokeWidth={1} />;
                     })()}
@@ -912,15 +967,24 @@ export default function CaissePage() {
         {/* Category filters */}
         <div className="hidden gap-2 pt-2 border-t border-border pb-2 lg:flex w-full overflow-x-auto">
           <div className="flex w-full gap-2 px-1">
-            {CATEGORIES.map(cat => {
+            {dynamicCATEGORIES.map(cat => {
+              const catData = dbCategories.find(c => c.key === cat.key);
               return (
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
-                  className={`flex-1 aspect-square rounded-xl transition-all flex flex-col items-center justify-center p-1.5 shadow-sm border border-transparent ${categoryColors[cat.key as CategoryType]} ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  className={`flex-1 aspect-square rounded-xl transition-all flex flex-col items-center justify-center p-1.5 shadow-sm border border-transparent text-white ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
+                  style={{ backgroundColor: catData?.color || '#9DC6D8' }}
                 >
-                  <div className="font-black text-lg md:text-xl tracking-wider text-center leading-tight">{cat.labelAr}</div>
-                  <span className="font-bold text-[9px] md:text-[11px] opacity-70 tracking-widest text-center uppercase mx-auto">{cat.label}</span>
+                  {(() => {
+                    if (catData?.customIcon) {
+                      return <img src={catData.customIcon} alt="icon" className="h-7 w-7 md:h-8 md:w-8 object-contain drop-shadow-sm mb-1" />;
+                    }
+                    const CatIcon = categoryIcons[cat.key] || Package;
+                    return <CatIcon className="h-7 w-7 md:h-8 md:w-8 mb-1 drop-shadow-sm opacity-90" strokeWidth={2} />;
+                  })()}
+                  <div className="font-black text-[13px] md:text-[15px] tracking-wider text-center leading-tight line-clamp-1">{cat.labelAr}</div>
+                  <span className="font-bold text-[8px] md:text-[9px] opacity-70 tracking-widest text-center uppercase mx-auto line-clamp-1">{cat.label}</span>
                 </button>
               );
             })}
@@ -1143,7 +1207,7 @@ export default function CaissePage() {
             <DialogTitle className="text-xl font-black text-center text-foreground border-b border-border pb-4 mb-2 tracking-tight">Veuillez choisir la Taille</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
-            {(sizeModalProduct?.category === "chaussures" ? SHOE_SIZES : SHIRT_SIZES).map(size => {
+            {(sizeModalProduct && isPointureCategory(sizeModalProduct.category) ? SHOE_SIZES : SHIRT_SIZES).map(size => {
               const qty = sizeModalProduct?.sizeStock?.[size] || 0;
 
               return (

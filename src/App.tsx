@@ -12,6 +12,7 @@ import InventairePage from "./pages/InventairePage";
 import AnalytiquePage from "./pages/AnalytiquePage";
 import LoginPage from "./pages/LoginPage";
 import WorkersPage from "./pages/WorkersPage";
+import CategoriesPage from "./pages/CategoriesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,11 @@ const AppRoutes = () => (
     <Route path="/workers" element={
       <ProtectedRoute requireAdmin>
         <Layout><WorkersPage /></Layout>
+      </ProtectedRoute>
+    } />
+    <Route path="/categories" element={
+      <ProtectedRoute requireAdmin>
+        <Layout><CategoriesPage /></Layout>
       </ProtectedRoute>
     } />
     <Route path="*" element={<NotFound />} />

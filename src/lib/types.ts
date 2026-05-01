@@ -1,4 +1,19 @@
-export type CategoryType = "hauts" | "pantalons" | "chaussures" | "accessoires" | "parfums" | "sport" | "sousvetements" | "vestes";
+export type CategoryType = string;
+
+export interface Category {
+    id: string;
+    key: string;
+    label: string;
+    labelAr: string;
+    color: string;
+    hoverColor: string;
+    icon: string;
+    customIcon?: string; // base64 data URI for uploaded icons
+    hasVentePersonnalisee: boolean;
+    hasTailles: boolean;
+    hasPointure: boolean;
+    sortOrder: number;
+}
 
 export interface Product {
     id: string;

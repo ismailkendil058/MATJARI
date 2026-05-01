@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  getInvoices, addInvoice, getSuppliers, addSupplier, getProducts, saveProducts, updateProductStock, deleteInvoice, updateProduct
+  getInvoices, addInvoice, getSuppliers, addSupplier, getProducts, saveProducts, updateProductStock, deleteInvoice, updateProduct, getCategories
 } from "@/lib/db";
 
-import { Invoice, InvoiceItem, Supplier, Product, CategoryType } from "@/lib/types";
-import { formatDZD, generateId, CATEGORIES } from "@/lib/store";
+import { Invoice, InvoiceItem, Supplier, Product, CategoryType, Category } from "@/lib/types";
+import { formatDZD, generateId } from "@/lib/store";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthContext";
 
-const categoryColors: Record<CategoryType, string> = {
+const categoryColorsFallback: Record<string, string> = {
   hauts: "bg-blue-50 text-blue-600 border-blue-100",
   pantalons: "bg-emerald-50 text-emerald-600 border-emerald-100",
   chaussures: "bg-indigo-50 text-indigo-600 border-indigo-100",
@@ -26,8 +26,6 @@ const categoryColors: Record<CategoryType, string> = {
   sousvetements: "bg-slate-50 text-slate-600 border-slate-100",
   vestes: "bg-cyan-50 text-cyan-600 border-cyan-100",
 };
-
-const SIZE_CATEGORIES: CategoryType[] = ["hauts", "sport", "sousvetements", "vestes", "chaussures"];
 
 
 type View = "list" | "add" | "return";
@@ -64,18 +62,39 @@ export default function FacturesPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const { user } = useAuth();
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+
+  // Dynamic derivations from categories
+  const SIZE_CATEGORIES = useMemo(() => {
+    return dbCategories.filter(c => c.hasTailles || c.hasPointure).map(c => c.key);
+  }, [dbCategories]);
+
+  const dynamicCATEGORIES = useMemo(() => {
+    return dbCategories.map(c => ({ key: c.key, label: c.label, labelAr: c.labelAr }));
+  }, [dbCategories]);
+
+  const isPointureCategory = useCallback((catKey: string) => {
+    return dbCategories.some(c => c.key === catKey && c.hasPointure);
+  }, [dbCategories]);
+
+  const categoryColors = useMemo(() => {
+    const map: Record<string, string> = { ...categoryColorsFallback };
+    return map;
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [invs, sups, prods] = await Promise.all([
+        const [invs, sups, prods, cats] = await Promise.all([
           getInvoices(),
           getSuppliers(),
-          getProducts()
+          getProducts(),
+          getCategories(),
         ]);
         setInvoices(invs);
         setSuppliers(sups);
         setProducts(prods);
+        setDbCategories(cats);
       } catch (error) {
         console.error("Error loading invoices data:", error);
       }
@@ -110,8 +129,8 @@ export default function FacturesPage() {
   const [itemSale, setItemSale] = useState<number | "">("");
   const [itemCategory, setItemCategory] = useState<CategoryType>("hauts");
   const [itemBarcode, setItemBarcode] = useState("");
-  const SHIRT_SIZES = ["S", "M", "L", "XL"];
-  const SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
+  const SHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
+  const SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45", "46", "47"];
   const [sizeQtys, setSizeQtys] = useState<Record<string, number>>({});
 
 
@@ -680,7 +699,7 @@ export default function FacturesPage() {
                     <SelectValue placeholder="Catégorie" />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-2">
-                    {CATEGORIES.map(cat => (
+                    {dynamicCATEGORIES.map(cat => (
                       <SelectItem key={cat.key} value={cat.key} className="text-lg py-3">
                         <span>{cat.label}</span>
                       </SelectItem>
@@ -692,8 +711,8 @@ export default function FacturesPage() {
               {/* Multi-Size Quantities (Clothing or Shoes) */}
               {SIZE_CATEGORIES.includes(itemCategory) ? (
                 <div className="flex gap-3">
-                  {(itemCategory === "chaussures" ? SHOE_SIZES : SHIRT_SIZES).map(size => (
-                    <div key={size} className={itemCategory === "chaussures" ? "w-14 space-y-3 text-center" : "w-16 space-y-3 text-center"}>
+                  {(isPointureCategory(itemCategory) ? SHOE_SIZES : SHIRT_SIZES).map(size => (
+                    <div key={size} className={isPointureCategory(itemCategory) ? "w-14 space-y-3 text-center" : "w-16 space-y-3 text-center"}>
                       <label className="text-[11px] font-black uppercase text-slate-400 tracking-widest block">{size}</label>
                       <Input
                         type="number"

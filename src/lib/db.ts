@@ -1,11 +1,12 @@
 import Database, { type QueryResult } from "@tauri-apps/plugin-sql";
-import { Product, Sale, Client, Payment, Supplier, Invoice, CustomSaleCard, User, Expense } from "./types";
+import { Product, Sale, Client, Payment, Supplier, Invoice, CustomSaleCard, User, Expense, Category } from "./types";
+import { DEFAULT_CATEGORIES } from "./store";
 
 const DB_FILENAME = "mimicha.db";
 const LEGACY_DB_FILENAME = "novadeco.db";
 const DB_URI = `sqlite:${DB_FILENAME}`;
 const LEGACY_DB_URI = `sqlite:${LEGACY_DB_FILENAME}`;
-const APP_TABLES = ["products", "clients", "suppliers", "sales", "payments", "invoices", "custom_cards", "users", "expenses"] as const;
+const APP_TABLES = ["products", "clients", "suppliers", "sales", "payments", "invoices", "custom_cards", "users", "expenses", "categories"] as const;
 
 type RawSaleRow = Omit<Sale, "items"> & { items: string };
 type RawInvoiceRow = Omit<Invoice, "supplier" | "items"> & { supplier: string; items: string };
@@ -175,6 +176,23 @@ async function createTables(database: Database) {
         amount REAL NOT NULL,
         date TEXT NOT NULL,
         note TEXT NOT NULL
+      )
+    `);
+
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id TEXT PRIMARY KEY,
+        key TEXT UNIQUE NOT NULL,
+        label TEXT NOT NULL,
+        labelAr TEXT NOT NULL,
+        color TEXT NOT NULL,
+        hoverColor TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        customIcon TEXT,
+        hasVentePersonnalisee INTEGER NOT NULL DEFAULT 0,
+        hasTailles INTEGER NOT NULL DEFAULT 0,
+        hasPointure INTEGER NOT NULL DEFAULT 0,
+        sortOrder INTEGER NOT NULL DEFAULT 0
       )
     `);
 
@@ -381,8 +399,21 @@ export async function initDb() {
 
                 await migrateLegacyDatabase(database);
 
-
-                // Removed default products insertion to allow clear usage
+                // Seed default categories if table is empty
+                try {
+                    const catCount = await getTableCount(database, "categories");
+                    if (catCount === 0) {
+                        for (const cat of DEFAULT_CATEGORIES) {
+                            await runExecute(
+                                database,
+                                "INSERT OR IGNORE INTO categories (id, key, label, labelAr, color, hoverColor, icon, customIcon, hasVentePersonnalisee, hasTailles, hasPointure, sortOrder) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+                                [cat.id, cat.key, cat.label, cat.labelAr, cat.color, cat.hoverColor, cat.icon, cat.customIcon || null, cat.hasVentePersonnalisee ? 1 : 0, cat.hasTailles ? 1 : 0, cat.hasPointure ? 1 : 0, cat.sortOrder]
+                            );
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error seeding default categories:", e);
+                }
 
                 return database;
             } catch (error) {
@@ -877,6 +908,61 @@ export async function deleteUser(id: string) {
         await database.execute("DELETE FROM users WHERE id = $1", [id]);
     } catch (error) {
         console.error("error deleting user", error);
+        throw error;
+    }
+}
+
+// Categories
+export async function getCategories(): Promise<Category[]> {
+    try {
+        const database = await initDb();
+        const rows = await runSelect<any[]>(database, "SELECT * FROM categories ORDER BY sortOrder ASC");
+        return rows.map(r => ({
+            ...r,
+            hasVentePersonnalisee: !!r.hasVentePersonnalisee,
+            hasTailles: !!r.hasTailles,
+            hasPointure: !!r.hasPointure,
+        }));
+    } catch (error) {
+        console.error("error getting categories", error);
+        return DEFAULT_CATEGORIES;
+    }
+}
+
+export async function addCategory(category: Category) {
+    try {
+        const database = await initDb();
+        await runExecute(
+            database,
+            "INSERT INTO categories (id, key, label, labelAr, color, hoverColor, icon, customIcon, hasVentePersonnalisee, hasTailles, hasPointure, sortOrder) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+            [category.id, category.key, category.label, category.labelAr, category.color, category.hoverColor, category.icon, category.customIcon || null, category.hasVentePersonnalisee ? 1 : 0, category.hasTailles ? 1 : 0, category.hasPointure ? 1 : 0, category.sortOrder]
+        );
+    } catch (error) {
+        console.error("error adding category", error);
+        throw error;
+    }
+}
+
+export async function updateCategory(category: Category) {
+    try {
+        const database = await initDb();
+        await runExecute(
+            database,
+            "UPDATE categories SET key = $1, label = $2, labelAr = $3, color = $4, hoverColor = $5, icon = $6, customIcon = $7, hasVentePersonnalisee = $8, hasTailles = $9, hasPointure = $10, sortOrder = $11 WHERE id = $12",
+            [category.key, category.label, category.labelAr, category.color, category.hoverColor, category.icon, category.customIcon || null, category.hasVentePersonnalisee ? 1 : 0, category.hasTailles ? 1 : 0, category.hasPointure ? 1 : 0, category.sortOrder, category.id]
+        );
+    } catch (error) {
+        console.error("error updating category", error);
+        throw error;
+    }
+}
+
+export async function deleteCategory(id: string) {
+    try {
+        const database = await initDb();
+        await database.execute("DELETE FROM categories WHERE id = $1", [id]);
+    } catch (error) {
+        console.error("error deleting category", error);
         throw error;
     }
 }

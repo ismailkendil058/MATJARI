@@ -1,4 +1,4 @@
-import { ShoppingCart, FileText, Package, BarChart3, Receipt, Users, LogOut } from "lucide-react";
+import { ShoppingCart, FileText, Package, BarChart3, Receipt, Users, LogOut, LayoutGrid } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthContext";
@@ -23,6 +23,7 @@ export function AppSidebar() {
 
   const adminNavItems = [
     ...navItems,
+    { title: "Catégories", url: "/categories", icon: LayoutGrid },
     { title: "Analytique", url: "/analytique", icon: BarChart3 },
     { title: "Travailleurs", url: "/workers", icon: Users },
   ];
