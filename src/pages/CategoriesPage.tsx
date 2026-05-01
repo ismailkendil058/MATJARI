@@ -9,6 +9,7 @@ import {
     Apple, Carrot, Fish, Beef, Milk, Croissant, Pizza, Candy, IceCream, Cookie, CupSoda,
     Wine, Beer, Martini, Brush, Wand2, Droplet, Smartphone, Laptop, Monitor, Plug, Tv,
     Stethoscope, Pill, Syringe, Cross, Wrench, Hammer, Sofa, Bed, Bath, Car, Bike, Tent, Ticket, Palmtree, Utensils,
+    SprayCan, Snowflake, ThermometerSnowflake, ThermometerSun, Drill, PenTool, GlassWater, User, Users,
     type LucideIcon
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -23,21 +24,21 @@ import { useToast } from "@/hooks/use-toast";
 const ICON_MAP: Record<string, LucideIcon> = {
     // Mode, vêtements, accessoires
     Shirt, Layers, Footprints, Watch, Sparkles, Dumbbell, Gem, Crown,
-    Glasses, Scissors, Umbrella, Briefcase, Pocket, Baby,
+    Glasses, Scissors, Umbrella, Briefcase, Pocket, Baby, User, Users,
     // Alimentation, supérettes, restaurants
     Store, ShoppingBasket, ShoppingBag, ShoppingCart, Package,
     Apple, Carrot, Fish, Beef, Milk, Croissant, Pizza, Candy,
-    IceCream, Cookie, Coffee, CupSoda, Wine, Beer, Martini, Utensils,
+    IceCream, Cookie, Coffee, CupSoda, Wine, Beer, Martini, Utensils, GlassWater,
     // Cosmétiques, beauté
-    Palette, Brush, Wand2, Droplet, Flower2, Heart, Star,
+    Palette, Brush, Wand2, Droplet, Flower2, Heart, Star, SprayCan,
     // Electronique, accessoires
     Smartphone, Laptop, Monitor, Plug, Tv, Music, Camera, Headphones,
     // Santé, pharmacie
     Stethoscope, Pill, Syringe, Cross,
     // Quincaillerie, meubles, véhicules divers
-    Wrench, Hammer, Sofa, Bed, Bath, Car, Bike, Tent, Ticket, Palmtree,
+    Wrench, Hammer, Sofa, Bed, Bath, Car, Bike, Tent, Ticket, Palmtree, Drill, PenTool,
     // Tabac, divers
-    Cigarette, Flame, Sun, Moon, Zap, Gift
+    Cigarette, Flame, Sun, Moon, Zap, Gift, Snowflake, ThermometerSnowflake, ThermometerSun
 };
 
 const ICON_NAMES = Object.keys(ICON_MAP);

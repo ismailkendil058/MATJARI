@@ -67,6 +67,14 @@
     @apply border-border;
   }
 
+  html {
+    /* Dynamically scales the base font size based on screen width. 
+       At 1920px, it's 16px. It smoothly scales down as the window gets smaller.
+       Since Tailwind uses rems for everything (padding, text size, margins, widths),
+       this single line scales the ENTIRE application UI perfectly without breaking layouts! */
+    font-size: clamp(10px, 0.833vw, 16px);
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
@@ -97,6 +105,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -870,13 +870,6 @@ export default function CaissePage() {
                   className={`flex-1 min-w-[72px] aspect-square rounded-2xl transition-all flex flex-col items-center justify-center p-1 shadow-sm border border-transparent text-white ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
                   style={{ backgroundColor: catData?.color || '#9DC6D8' }}
                 >
-                  {(() => {
-                    if (catData?.customIcon) {
-                      return <img src={catData.customIcon} alt="icon" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-sm mb-1" />;
-                    }
-                    const CatIcon = categoryIcons[cat.key] || Package;
-                    return <CatIcon className="h-6 w-6 md:h-8 md:w-8 mb-1 drop-shadow-sm opacity-90" strokeWidth={2} />;
-                  })()}
                   <div className="font-black text-xs md:text-sm tracking-wider text-center leading-tight line-clamp-1">{cat.labelAr}</div>
                   <span className="font-bold text-[8px] md:text-[9px] opacity-75 tracking-widest text-center uppercase mx-auto line-clamp-1">{cat.label}</span>
                 </button>
@@ -976,13 +969,6 @@ export default function CaissePage() {
                   className={`flex-1 aspect-square rounded-xl transition-all flex flex-col items-center justify-center p-1.5 shadow-sm border border-transparent text-white ${activeCategory === cat.key ? 'ring-4 ring-primary scale-[0.98]' : 'hover:-translate-y-0.5'}`}
                   style={{ backgroundColor: catData?.color || '#9DC6D8' }}
                 >
-                  {(() => {
-                    if (catData?.customIcon) {
-                      return <img src={catData.customIcon} alt="icon" className="h-7 w-7 md:h-8 md:w-8 object-contain drop-shadow-sm mb-1" />;
-                    }
-                    const CatIcon = categoryIcons[cat.key] || Package;
-                    return <CatIcon className="h-7 w-7 md:h-8 md:w-8 mb-1 drop-shadow-sm opacity-90" strokeWidth={2} />;
-                  })()}
                   <div className="font-black text-[13px] md:text-[15px] tracking-wider text-center leading-tight line-clamp-1">{cat.labelAr}</div>
                   <span className="font-bold text-[8px] md:text-[9px] opacity-70 tracking-widest text-center uppercase mx-auto line-clamp-1">{cat.label}</span>
                 </button>
