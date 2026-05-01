@@ -1110,46 +1110,46 @@ export default function FacturesPage() {
 
   // --- List View (Default) ---
   const desktopList = (
-    <div className="p-12 animate-fade-in bg-white min-h-screen font-sans text-gray-800">
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-12">
+    <div className="p-8 lg:p-12 animate-fade-in bg-[#f4f8f8] min-h-screen font-sans text-gray-800">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
         <div>
-          <h2 className="text-6xl font-black tracking-tight text-[#243740]">Gestion des Factures</h2>
-          <p className="text-xl text-muted-foreground font-bold mt-2">Suivez vos achats et retours fournisseurs</p>
+          <h2 className="text-5xl font-black tracking-tight text-[#3f5362]">Gestion des Factures</h2>
+          <p className="text-xl text-gray-500 font-medium mt-2">Suivez vos achats et retours fournisseurs</p>
         </div>
         <div className="flex gap-4">
-          <Button onClick={() => setView("return")} variant="outline" className="h-16 rounded-2xl border-2 border-border px-8 hover:bg-white font-black text-xl text-[#243740] shadow-sm transition-all hover:border-primary">
-            <RotateCcw className="mr-3 h-6 w-6" />
+          <Button onClick={() => setView("return")} variant="outline" className="h-16 rounded-2xl border border-gray-200 bg-white px-8 font-black text-xl text-[#3f5362] shadow-sm transition-all hover:border-primary">
+            <RotateCcw className="mr-3 h-6 w-6 text-primary" />
             Effectuer un Retour
           </Button>
-          <Button onClick={() => setView("add")} className="h-16 rounded-2xl bg-[#41b86d] px-10 font-black text-xl text-white hover:bg-[#39a05f] shadow-xl shadow-green-200 transition-all hover:-translate-y-1">
+          <Button onClick={() => setView("add")} className="h-16 rounded-2xl bg-[#41b86d] px-10 font-black text-xl text-white hover:bg-[#39a05f] shadow-lg shadow-green-200 transition-all hover:-translate-y-1">
             <Plus className="mr-3 h-7 w-7" />
             Nouvel Achat
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 mb-10">
+      <div className="flex gap-6 mb-10">
         <div className="relative flex-1 max-w-xl">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-7 w-7 text-gray-400" />
           <Input
             placeholder="Rechercher par numéro ou fournisseur..."
-            className="pl-16 bg-white border-2 border-border h-16 shadow-sm rounded-2xl focus-visible:ring-primary/20 text-xl font-bold"
+            className="pl-16 bg-white border border-gray-200 h-16 shadow-sm rounded-2xl focus-visible:ring-0 text-lg font-bold"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <Input
           type="date"
-          className="w-full md:w-auto px-6 h-16 bg-white rounded-2xl shadow-sm border-2 border-border text-xl font-black text-gray-600 focus:border-primary transition-colors"
+          className="w-full md:w-auto px-6 h-16 bg-white rounded-2xl shadow-sm border border-gray-200 text-lg font-black text-gray-600 focus:outline-none"
           value={dateFilter}
           onChange={e => setDateFilter(e.target.value)}
         />
       </div>
 
-      <div className="bg-white border-2 border-border rounded-[2.5rem] shadow-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
         <table className="w-full text-center">
-          <thead className="bg-[#f7fbfa] border-b-2 border-border">
-            <tr className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
               <th className="px-8 py-6">Numéro</th>
               <th className="px-8 py-6 text-left">Fournisseur</th>
               <th className="px-8 py-6">Articles</th>
@@ -1157,44 +1157,44 @@ export default function FacturesPage() {
               <th className="px-8 py-6">Date</th>
               <th className="px-8 py-6">Type</th>
               {user?.role === "admin" && (
-                <th className="px-8 py-6">Utilisateurs</th>
+                <th className="px-8 py-6 text-left">Utilisateurs</th>
               )}
               <th className="px-8 py-6 w-20"></th>
             </tr>
           </thead>
-          <tbody className="divide-y-2 divide-border">
+          <tbody>
             {filtered.map(inv => (
-              <tr key={inv.id} className="hover:bg-primary/5 transition-all group cursor-pointer" onClick={() => setSelectedInvoice(inv)}>
-                <td className="px-8 py-8 font-black text-2xl text-foreground">{inv.number}</td>
-                <td className="px-8 py-8 text-left">
+              <tr key={inv.id} className="border-b last:border-0 border-gray-50 hover:bg-[#f0fbf4]/40 transition-colors group cursor-pointer" onClick={() => setSelectedInvoice(inv)}>
+                <td className="px-8 py-6 font-black text-xl text-gray-700">{inv.number}</td>
+                <td className="px-8 py-6 text-left">
                   <div className="flex flex-col">
-                    <span className="font-black text-2xl text-foreground">{inv.supplier.name}</span>
-                    <span className="text-xs font-bold text-muted-foreground mt-1 tracking-widest uppercase">{inv.supplier.phone || "SANS CONTACT"}</span>
+                    <span className="font-black text-xl text-gray-700">{inv.supplier.name}</span>
+                    <span className="text-[10px] font-bold text-gray-400 mt-1 tracking-widest uppercase">{inv.supplier.phone || "SANS CONTACT"}</span>
                   </div>
                 </td>
-                <td className="px-8 py-8">
-                  <span className="bg-secondary/50 px-4 py-2 rounded-xl text-xs font-black text-muted-foreground uppercase tracking-widest">
+                <td className="px-8 py-6">
+                  <span className="bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-black text-gray-500 uppercase tracking-widest">
                     {inv.items.length} article{inv.items.length > 1 ? "s" : ""}
                   </span>
                 </td>
-                <td className="px-8 py-8 font-black text-3xl text-primary tracking-tighter">{formatDZD(inv.total)}</td>
-                <td className="px-8 py-8 font-black text-lg text-muted-foreground">{inv.date}</td>
-                <td className="px-8 py-8">
-                  <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-sm ${inv.type === "achat" ? "bg-green-100 text-green-700 border-b-4 border-green-200" : "bg-rose-100 text-rose-700 border-b-4 border-rose-200"}`}>
+                <td className="px-8 py-6 font-black text-2xl text-primary tracking-tighter">{formatDZD(inv.total)}</td>
+                <td className="px-8 py-6 font-black text-base text-gray-400">{inv.date}</td>
+                <td className="px-8 py-6 text-center">
+                  <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-[0.2em] ${inv.type === "achat" ? "bg-green-50 text-green-700" : "bg-rose-50 text-rose-700"}`}>
                     {inv.type}
                   </span>
                 </td>
                 {user?.role === "admin" && (
-                  <td className="px-8 py-8">
+                  <td className="px-8 py-6">
                     <div className="flex flex-col text-left space-y-1">
-                      <span className="text-sm font-black text-slate-500 uppercase tracking-widest">Added: {inv.addedBy || "-"}</span>
-                      {inv.editedBy && <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Edited: {inv.editedBy}</span>}
+                      <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Added: {inv.addedBy || "-"}</span>
+                      {inv.editedBy && <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Edited: {inv.editedBy}</span>}
                     </div>
                   </td>
                 )}
-                <td className="px-8 py-8 text-right">
-                  <div className="h-14 w-14 rounded-2xl bg-secondary/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:scale-110 transition-all group-hover:shadow-lg group-hover:shadow-primary/20">
-                    <Eye className="h-7 w-7" />
+                <td className="px-8 py-6 text-right">
+                  <div className="h-12 w-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-primary group-hover:text-white transition-all">
+                    <Eye className="h-6 w-6" />
                   </div>
                 </td>
               </tr>

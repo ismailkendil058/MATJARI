@@ -580,6 +580,20 @@ export async function deleteSale(id: string) {
     }
 }
 
+export async function getSalesByClient(clientId: string): Promise<Sale[]> {
+    try {
+        const database = await initDb();
+        const rows = await runSelect<RawSaleRow[]>(database, "SELECT * FROM sales WHERE clientId = $1 ORDER BY date DESC", [clientId]);
+        return rows.map((row) => ({
+            ...row,
+            items: JSON.parse(row.items),
+        } as Sale));
+    } catch (error) {
+        console.error("error getting sales by client", error);
+        return [];
+    }
+}
+
 // Suppliers
 export async function getSuppliers(): Promise<Supplier[]> {
     try {
@@ -703,6 +717,16 @@ export async function getPayments(monthPrefix?: string): Promise<Payment[]> {
         return await runSelect<Payment[]>(database, query, params);
     } catch (error) {
         console.error("error getting payments", error);
+        return [];
+    }
+}
+
+export async function getPaymentsByClient(clientId: string): Promise<Payment[]> {
+    try {
+        const database = await initDb();
+        return await runSelect<Payment[]>(database, "SELECT * FROM payments WHERE clientId = $1 ORDER BY date DESC", [clientId]);
+    } catch (error) {
+        console.error("error getting payments by client", error);
         return [];
     }
 }
